@@ -1,4 +1,4 @@
-git+https://github.com/polymarket/clob-client-python.git
+py-clob-client>=2.0.0
 python-dotenv>=1.0.0
 websockets>=11.0.3
 aiohttp>=3.8.5
