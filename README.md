@@ -1,61 +1,141 @@
-# PolyMarket Scalpel Bot V7.0 (HFT Resistant Edition)
+# 🗡️ PolyMarket Scalpel Bot V7.0 (HFT Resistant)
 
-这是一款专为 Polymarket 预测市场设计的**极短线尾端套利机器人**。系统采用 Python 3.10+ 异步架构，核心逻辑在于利用“手术刀”般的精准度捕捉高胜率（>0.94）的市场尾端机会。
-
----
-
-## 🛡️ 安全设计 (Security)
-
-本项目采用了 **System Keyring (Scheme B)** 加密方案：
-- **物理隔离**：私钥不存储于任何文本文件中，而是存入操作系统内核级的加密保险箱。
-- **本地签名**：所有交易均在本地内存完成签名，私钥永不联网。
+[English](#english) | [中文](#中文)
 
 ---
 
-## 🚀 快速部署 (Deployment)
+<a name="english"></a>
 
-### 1. 环境准备
+## English
 
-| 操作系统 | 激活指令 | 依赖安装 |
-| :--- | :--- | :--- |
-| **Windows** | `.\venv\Scripts\Activate.ps1` | `pip install -r requirements.txt` |
-| **Linux** | `source venv/bin/activate` | `sudo apt install libdbus-1-dev libsecret-1-dev && pip install -r requirements.txt` |
+### 🧠 Design Philosophy: The "Scalpel" Approach
+PolyMarket Scalpel is a high-frequency-ready (HFT) short-term arbitrage bot. 
+- **Precision**: Targets high-probability (0.94-0.99) outcomes in the final 1-12 hours.
+- **Resilience**: Uses momentum filters to avoid "falling knives" and liquidity checks to prevent HFT front-running.
+- **Security**: Private keys are stored in the OS-level hardware-backed keyring (AES-256), never in plain text.
 
-### 2. 凭证配置 (核心)
-运行以下脚本，按照提示粘贴您的私钥。脚本将自动完成 L2 账户激活并将凭证安全存储：
-```bash
-# 推荐使用 python3
-python3 scripts/onboard_user.py
-```
+### 🛡️ Feature Set
+1.  **Security**: System Keyring (Scheme B) encryption.
+2.  **Strategy**: 0.94+ "Sure Thing" logic with 5x liquidity depth requirement.
+3.  **Risk Management**: L2 Hard Stop (0.85 price floor) and Global Circuit Breaker (24h sleep after 2 hard stops).
 
-### 3. 启动机器人
-```bash
-python3 -m src.main
-```
+### 🚀 Detailed Installation
+
+#### **Windows**
+1. **Prepare Environment**:
+   ```powershell
+   cd PolyMarket-Arb-Bot-V6
+   python -m venv venv
+   .\venv\Scripts\Activate.ps1
+   pip install -r requirements.txt
+   ```
+2. **Onboarding**:
+   ```powershell
+   python scripts/onboard_user.py
+   ```
+
+#### **Linux (Ubuntu/Debian)**
+1. **Install Dependencies**:
+   ```bash
+   sudo apt update && sudo apt install -y libdbus-1-dev libsecret-1-dev python3-dev
+   ```
+2. **Prepare Environment**:
+   ```bash
+   cd PolyMarket-Arb-Bot-V6
+   python3 -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
+   ```
+3. **Onboarding**:
+   ```bash
+   python3 scripts/onboard_user.py
+   ```
+
+#### **macOS**
+1. **Prepare Environment**:
+   ```bash
+   cd PolyMarket-Arb-Bot-V6
+   python3 -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
+   ```
+2. **Onboarding**:
+   ```bash
+   python3 scripts/onboard_user.py
+   ```
+
+### ⚙️ Usage
+- **Start Bot**: `python -m src.main`
+- **Stop Bot**: Press `Ctrl + C` (Graceful shutdown).
 
 ---
 
-## 📈 策略概览 (Strategy V7.0)
+<a name="中文"></a>
 
-- **入场区间**：价格在 `0.94 - 0.99` 之间。
-- **时间窗口**：仅锁定距离结算前 `1h - 12h` 的快消型市场。
-- **动量过滤**：排除过去 2h 跌幅超过 `$0.02` 的飞刀标的。
-- **严苛止损**：现价跌破 `0.85` 并持续 15 秒即全仓 Taker 平仓。
-- **全局熔断**：12h 内触发 2 次硬损即自动休眠 24h。
+## 中文
+
+### 🧠 设计思想：“手术刀”原则
+PolyMarket Scalpel 是一款专为极短线套利设计的机器人。
+- **精准度**：仅锁定距离结算前 1-12 小时、胜率极高（价格 0.94-0.99）的市场。
+- **抗 HFT**：通过动量过滤拒绝“接飞刀”，通过流动性倍率检查防止被高频机器人围猎。
+- **安全性**：私钥存储于操作系统内核级加密保险箱（AES-256），永不以明文形式存在于磁盘。
+
+### 🛡️ 功能特性
+1.  **安全架构**：采用 System Keyring (Scheme B) 加密方案。
+2.  **核心策略**：0.94+ 稳赢逻辑，要求订单簿深度至少为交易额的 5 倍。
+3.  **风控系统**：L2 硬止损（价格跌破 0.85 持续 15s 强制平仓）及全局熔断机制。
+
+### 🚀 详细安装指南
+
+#### **Windows 系统**
+1. **环境准备**：
+   ```powershell
+   cd PolyMarket-Arb-Bot-V6
+   python -m venv venv
+   .\venv\Scripts\Activate.ps1
+   pip install -r requirements.txt
+   ```
+2. **凭证配置**：
+   ```powershell
+   python scripts/onboard_user.py
+   ```
+
+#### **Linux 系统 (Ubuntu/Debian)**
+1. **安装系统依赖**：
+   ```bash
+   sudo apt update && sudo apt install -y libdbus-1-dev libsecret-1-dev python3-dev
+   ```
+2. **环境准备**：
+   ```bash
+   cd PolyMarket-Arb-Bot-V6
+   python3 -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
+   ```
+3. **凭证配置**：
+   ```bash
+   python3 scripts/onboard_user.py
+   ```
+
+#### **macOS 系统**
+1. **环境准备**：
+   ```bash
+   cd PolyMarket-Arb-Bot-V6
+   python3 -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
+   ```
+2. **凭证配置**：
+   ```bash
+   python3 scripts/onboard_user.py
+   ```
+
+### ⚙️ 运行说明
+- **启动机器人**：`python -m src.main`
+- **停止机器人**：按下 `Ctrl + C`（程序将安全撤单并退出）。
 
 ---
 
-## ❓ 常见问题 (FAQ)
-
-**Q: 为什么运行提示 ModuleNotFoundError?**
-A: 请确保您已激活虚拟环境 `(venv)` 并运行了 `pip install -r requirements.txt`。
-
-**Q: 为什么注册提示 400 错误?**
-A: 您的钱包需要至少 0.1 MATIC，并建议先在官网手动完成一次 "Enable Trading" 签名。
-
-**Q: 如何修改交易金额?**
-A: 在根目录创建 `.env` 文件，设置 `ORDER_AMOUNT_USD=10` 即可。
-
----
-
-**⚠️ 免责声明**: 本软件仅供量化交易技术研究。加密货币交易具有高风险，请谨慎操作。
+## ⚠️ Disclaimer / 免责声明
+This software is for educational purposes. Trading involves risk. 
+本软件仅供技术研究，量化交易具有高度风险，请谨慎操作。
