@@ -6,7 +6,7 @@ def setup():
     
     print("--- PolyMarket Bot Secure Credential Setup ---")
     
-    # 只需要存储最敏感的 4 个字段
+    # 存储最敏感的 4 个字段
     secrets = {
         "EOA_PRIVATE_KEY": "Your Ethereum Private Key (without 0x)",
         "CLOB_API_KEY": "Polymarket L2 API Key",
@@ -15,15 +15,18 @@ def setup():
     }
     
     for key, description in secrets.items():
-        value = getpass.getpass(f"Enter {key} ({description}): ")
-        if value:
-            keyring.set_password(service_id, key, value)
-            print(f"Successfully saved {key} to system keyring.")
-        else:
-            print(f"Skipped {key}.")
+        try:
+            prompt = f"Enter {key} ({description}): "
+            value = getpass.getpass(prompt)
+            if value:
+                keyring.set_password(service_id, key, value)
+                print(f"Successfully saved {key} to system keyring.")
+            else:
+                print(f"Skipped {key}.")
+        except Exception as e:
+            print(f"Error saving {key}: {e}")
 
-    print("
-Setup Complete. You can now safely delete the values from your .env file.")
+    print("\nSetup Complete. You can now safely delete the sensitive values from your .env file.")
 
 if __name__ == "__main__":
     setup()
