@@ -24,9 +24,9 @@ class Settings(BaseSettings):
     MIN_HOURS_TO_EXPIRY: float = 1.0
     MAX_HOURS_TO_EXPIRY: float = 12.0
     
-    # 进场价格区间
-    ENTRY_PRICE_MIN: float = 0.95
-    ENTRY_PRICE_MAX: float = 0.97
+    # 进场价格区间 (V7.0 激进版：0.94 - 0.99)
+    ENTRY_PRICE_MIN: float = 0.94
+    ENTRY_PRICE_MAX: float = 0.99
     
     # 动量过滤：拒绝接飞刀 (过去2小时高点 - 现价 > 0.02)
     MOMENTUM_LOOKBACK_HOURS: int = 2
@@ -44,7 +44,8 @@ class Settings(BaseSettings):
 
     POISON_KEYWORDS: List[str] = [
         'dispute', 'uma', 'opinion', 'oscars', 'twitter', 
-        'tweet', 'x.com', 'announce', 'live', 'next goal', 'minute'
+        'tweet', 'x.com', 'announce', 'live', 'next goal', 'minute',
+        'tom hanks', 'ellen degeneres', 'rumor', 'death', 'fake'
     ]
     
     MAX_VOLATILITY_THRESHOLD: float = 0.05
