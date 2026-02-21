@@ -10,8 +10,14 @@ from .scanner import MarketScanner
 from .execution import ExecutionEngine
 from .monitor import RiskMonitor
 
+import os
+
 class PolyArbBot:
     def __init__(self):
+        # 自动创建日志目录
+        if not os.path.exists("logs"):
+            os.makedirs("logs")
+            
         host = "https://clob.polymarket.com"
         
         # 构造新版 SDK 所需的 ApiCreds 对象
