@@ -1,6 +1,6 @@
 # PolyMarket Scalpel Bot V7.0 (HFT Resistant Edition)
 
-这是一款专为 Polymarket 预测市场设计的**极短线尾端套利机器人**。系统采用 Python 3.10+ 异步架构，核心逻辑在于利用“手术刀”般的精准度捕捉高胜率（>0.95）的市场尾端机会，并配合严苛的动量过滤与阶梯止损机制，最大程度规避机构高频机器人的收割。
+这是一款专为 Polymarket 预测市场设计的**极短线尾端套利机器人**。系统采用 Python 3.10+ 异步架构，核心逻辑在于利用“手术刀”般的精准度捕捉高胜率（>0.94）的市场尾端机会，并配合严苛的动量过滤与阶梯止损机制，最大程度规避机构高频机器人的收割。
 
 ---
 
@@ -8,7 +8,7 @@
 
 本系统采用解耦的异步非阻塞架构，确保在极端行情波动下依然保持秒级响应：
 
-- **`src/config.py` (配置中心)**: 统一管理 L2 凭证读取、黑名单关键词及 V7.0 策略核心参数。
+- **`src/config.py` (配置中心)**: 统一管理凭证读取、黑名单关键词及 V7.0 策略核心参数。
 - **`src/scanner.py` (动量扫描器)**: 
     - **时间隔离**: 严格锁定距离结算前 `1h - 12h` 的快消型市场。
     - **动量过滤 (Momentum Filter)**: 自动获取过去 2h 价格，若现价偏离高点超过 $0.02（接飞刀形态），则自动拒绝进场。
@@ -29,7 +29,7 @@
 | 维度 | 策略规则 | 目的 |
 | :--- | :--- | :--- |
 | **准入窗口** | 1小时 < 剩余时间 < 12小时 | 避开长线变数，锁定胜负已分的尾端 |
-| **价格区间** | 0.95 - 0.97 | 捕捉高概率确定性事件 |
+| **价格区间** | 0.94 - 0.99 | 激进捕获高概率确定性事件 |
 | **趋势过滤** | 过去 2h 高点 - 现价 ≤ 0.02 | 拒绝参与阴跌或暴跌中的“接飞刀”标的 |
 | **进场方式** | Post-Only Limit Order (+0.001) | 确保始终是 Maker，杜绝 Taker 手续费 |
 | **止损策略** | 0.85 持续 15 秒触发硬止损 | 极速斩仓，防止亏损扩大至 0.80 以下 |
@@ -37,34 +37,37 @@
 
 ---
 
-## 三、 软件部署说明 (初学者指南)
+## 三、 软件部署说明
 
 ### 1. 环境初始化
-打开 Windows PowerShell，依次执行：
-```powershell
-cd C:\Usersoywa\PolyMarket-Arb-Bot-V6
-# 创建并激活虚拟环境
+打开终端，依次执行：
+```bash
+# 进入项目目录
+cd PolyMarket-Arb-Bot-V6
+# 创建虚拟环境
 python -m venv venv
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+# 激活环境 (Windows)
 .\venv\Scripts\Activate.ps1
+# 激活环境 (Linux/macOS)
+source venv/bin/activate
 # 安装依赖
 pip install -r requirements.txt
 ```
 
 ### 2. 安全与凭证配置
 运行一键自动注册脚本。它将引导您输入私钥，并自动派生 API Key 后加密存入系统保险箱（Keyring）：
-```powershell
+```bash
 python scripts/onboard_user.py
 ```
 *提示：粘贴私钥时屏幕无显示是正常现象，输完按回车。*
 
 ### 3. 修改运行参数
-编辑根目录下的 `.env` 文件：
-- `WALLET_ADDRESS`: 您的 0x 钱包地址。
-- `ORDER_AMOUNT_USD`: 单笔投入金额（建议初学者设为 5 或 10）。
+编辑根目录下的 `.env` 文件（请参考 `.env.example`）：
+- `WALLET_ADDRESS`: 您的钱包地址。
+- `ORDER_AMOUNT_USD`: 单笔投入金额。
 
 ### 4. 启动机器人
-```powershell
+```bash
 python -m src.main
 ```
 
@@ -72,10 +75,9 @@ python -m src.main
 
 ## 四、 运行维护建议
 
-1. **资金准备**: 钱包需保留少量 **MATIC** (作为 Gas) 和足额 **USDC** (作为本金)。
-2. **运行环境**: 请确保电脑关闭“休眠模式”，保持网络连接稳定。
+1. **资金准备**: 钱包需保留少量 MATIC (Gas) 和足额 USDC (本金)。
+2. **安全性**: 永远不要将包含私钥或 API 密钥的文件提交至公共仓库。本系统已默认通过 Keyring 加密存储敏感信息。
 3. **日志复盘**: 所有交易细节均实时保存在 `logs/trading.log` 中。
-4. **手动干预**: 如果发现市场有异常争议（UMA Dispute），机器人会尝试 L3 熔断。若需手动停止，请按 `Ctrl + C`，机器人将执行优雅退出并撤销所有挂单。
 
 ---
 
