@@ -19,6 +19,29 @@ class Settings(BaseSettings):
     MAX_ACTIVE_POSITIONS_PER_CATEGORY: int = 5
     GLOBAL_MAX_POSITIONS: int = 10
     
+    # V7.0 策略核心参数
+    # 时间窗口：仅允许 1h - 12h
+    MIN_HOURS_TO_EXPIRY: float = 1.0
+    MAX_HOURS_TO_EXPIRY: float = 12.0
+    
+    # 进场价格区间
+    ENTRY_PRICE_MIN: float = 0.95
+    ENTRY_PRICE_MAX: float = 0.97
+    
+    # 动量过滤：拒绝接飞刀 (过去2小时高点 - 现价 > 0.02)
+    MOMENTUM_LOOKBACK_HOURS: int = 2
+    MAX_PRICE_DROP_TOLERANCE: float = 0.02
+
+    # 严苛止损参数
+    STOP_LOSS_L1_TRIGGER: float = 0.91 # 撤销止盈
+    STOP_LOSS_L2_TRIGGER: float = 0.85 # 市价止损
+    STOP_LOSS_L2_CONFIRM_SECONDS: int = 15
+    
+    # 系统级熔断 (Global Circuit Breaker)
+    CB_WINDOW_HOURS: int = 12
+    CB_MAX_HARD_STOPS: int = 2
+    CB_SLEEP_HOURS: int = 24
+
     POISON_KEYWORDS: List[str] = [
         'dispute', 'uma', 'opinion', 'oscars', 'twitter', 
         'tweet', 'x.com', 'announce', 'live', 'next goal', 'minute'

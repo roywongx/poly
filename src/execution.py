@@ -1,7 +1,7 @@
 import asyncio
 from loguru import logger
 from typing import Dict, Optional
-from pyclob_client.clob_types import OrderArgs, OrderType
+from py_clob_client.clob_types import OrderArgs, OrderType
 from .config import settings
 
 class ExecutionEngine:

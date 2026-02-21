@@ -2,7 +2,8 @@ import asyncio
 import sys
 import signal
 from loguru import logger
-from pyclob_client.client import ClobClient
+from py_clob_client.client import ClobClient
+from py_clob_client.clob_types import ApiCreds
 
 from .config import settings
 from .scanner import MarketScanner
@@ -12,13 +13,19 @@ from .monitor import RiskMonitor
 class PolyArbBot:
     def __init__(self):
         host = "https://clob.polymarket.com"
+        
+        # 构造新版 SDK 所需的 ApiCreds 对象
+        creds = ApiCreds(
+            api_key=settings.CLOB_API_KEY,
+            api_secret=settings.CLOB_API_SECRET,
+            api_passphrase=settings.CLOB_PASSPHRASE
+        )
+        
         self.clob_client = ClobClient(
             host=host,
-            key=settings.CLOB_API_KEY,
-            secret=settings.CLOB_API_SECRET,
-            passphrase=settings.CLOB_PASSPHRASE,
-            private_key=settings.EOA_PRIVATE_KEY,
-            chain_id=settings.CHAIN_ID
+            key=settings.EOA_PRIVATE_KEY,
+            chain_id=settings.CHAIN_ID,
+            creds=creds
         )
         self.execution = ExecutionEngine(self.clob_client)
         self.scanner = MarketScanner(self.clob_client)
