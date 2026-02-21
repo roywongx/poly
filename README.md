@@ -11,15 +11,11 @@
 ### 1. 物理隔离：零明文存储 (Zero Plain-Text Storage)
 大多数开源脚本要求将私钥写在 `.env` 或 `.json` 文件中，这在电脑中毒或代码误提交时会导致资金瞬间归零。
 - **方案**：本项目采用了 **System Keyring (Scheme B)** 方案。
-- **实现**：私钥和 API 凭证在输入后，会被直接存入操作系统内核级的“加密保险箱”（如 Windows 凭据管理器、macOS Keychain 或 Linux Secret Service）。磁盘上没有任何包含私钥的明文文件。
+- **实现**：私钥和 API 凭证在输入后，会被直接存入操作系统内核级的“加密保险箱”（如 Windows 凭据管理器、macOS Keychain 或 Linux Secret Service/D-Bus）。磁盘上没有任何包含私钥的明文文件。
 
 ### 2. 本地签名：非托管运行 (Non-Custodial Execution)
-- **原理**：机器人利用 Polymarket 的 L1+L2 架构。
-- **安全**：所有的交易签名均在您的本地内存中完成，私钥**永远不会**通过网络发送给 Polymarket 服务器，更不会泄露给任何第三方。
-
-### 3. 自动化派生：最小权限原则
-- **流程**：通过内置的 `onboard_user.py` 脚本，用户只需在本地环境输入一次私钥，系统会自动与区块链交互并派生出 L2 交易凭证（API Key/Secret）。
-- **保护**：一旦派生完成，机器人运行仅需 L2 凭证进行鉴权，最大限度减少了高权限 L1 私钥在内存中的暴露时间。
+- **原理**：机器人利用 Polymarket 的 L1+L2 架构，所有的交易签名均在您的本地内存中完成。
+- **安全**：私钥**永远不会**通过网络发送给服务器，更不会泄露给任何第三方。
 
 ---
 
@@ -35,27 +31,27 @@
 
 ---
 
-## 二、 V7.0 核心策略逻辑
-
-| 维度 | 策略规则 | 目的 |
-| :--- | :--- | :--- |
-| **准入窗口** | 1小时 < 剩余时间 < 12小时 | 避开长线变数，锁定胜负已分的尾端 |
-| **价格区间** | 0.94 - 0.99 | 激进捕获高概率确定性事件 |
-| **趋势过滤** | 过去 2h 高点 - 现价 ≤ 0.02 | 拒绝参与阴跌或暴跌中的“接飞刀”标的 |
-| **进场方式** | Post-Only Limit Order (+0.001) | 确保始终是 Maker，杜绝 Taker 手续费 |
-| **止损策略** | 0.85 持续 15 秒触发硬止损 | 极速斩仓，防止亏损扩大至 0.80 以下 |
-| **系统熔断** | 12h 内 2 次硬损即休眠 24h | 保护本金，避开系统性抛售潮 |
-
----
-
-## 三、 软件部署说明
+## 二、 软件部署说明
 
 ### 1. 环境初始化
-```bash
+
+#### Windows 系统:
+```powershell
 # 进入项目目录并创建虚拟环境
 python -m venv venv
-# 激活环境 (Windows)
 .\venv\Scripts\Activate.ps1
+# 安装依赖
+pip install -r requirements.txt
+```
+
+#### Linux 系统 (Ubuntu/Debian):
+```bash
+# 安装系统依赖 (keyring 驱动)
+sudo apt-get update
+sudo apt-get install python3-dev libdbus-1-dev libsecret-1-dev
+# 进入项目目录并创建虚拟环境
+python3 -m venv venv
+source venv/bin/activate
 # 安装依赖
 pip install -r requirements.txt
 ```
@@ -63,13 +59,25 @@ pip install -r requirements.txt
 ### 2. 安全与凭证配置 (核心安全步骤)
 运行以下脚本，按照提示粘贴您的私钥。脚本将自动完成 L2 账户激活并将凭证加密存入系统保险箱：
 ```bash
-python scripts/onboard_user.py
+python3 scripts/onboard_user.py
 ```
 
 ### 3. 启动机器人
 ```bash
-python -m src.main
+# 确保在虚拟环境下运行
+python3 -m src.main
 ```
+
+---
+
+## 三、 V7.0 核心策略逻辑
+
+| 维度 | 策略规则 | 目的 |
+| :--- | :--- | :--- |
+| **准入窗口** | 1小时 < 剩余时间 < 12小时 | 避开长线变数，锁定胜负已分的尾端 |
+| **价格区间** | 0.94 - 0.99 | 激进捕获高概率确定性事件 |
+| **进场方式** | Post-Only Limit Order (+0.001) | 确保始终是 Maker，杜绝 Taker 手续费 |
+| **系统熔断** | 12h 内 2 次硬损即休眠 24h | 保护本金，避开系统性抛售潮 |
 
 ---
 
@@ -77,7 +85,7 @@ python -m src.main
 
 1. **安全性自检**: 本系统已默认通过 Keyring 加密存储。请勿为了图方便将私钥硬编码回代码。
 2. **资金准备**: 钱包需保留少量 MATIC (Gas) 和足额 USDC (本金)。
-3. **日志监控**: 详细流水保存在 `logs/trading.log` 中，建议定期查阅。
+3. **长期运行 (Linux)**: 建议在 Linux 服务器上使用 `screen` 或 `tmux` 运行机器人，以保持后台常驻。
 
 ---
 
