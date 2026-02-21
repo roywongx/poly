@@ -4,33 +4,32 @@ from pydantic import Field, model_validator
 from typing import List, Optional
 
 class Settings(BaseSettings):
-    # 非敏感配置可以继续留在 .env 或默认值
-    WALLET_ADDRESS: str
-    CHAIN_ID: int = 137
-    POLYGON_RPC_URL: str = "https://polygon-rpc.com"
-    
-    # 敏感字段设为 Optional，我们将通过 validator 从 keyring 填充
+    # === 基础连接配置 ===
+    WALLET_ADDRESS: str                                    # 您的钱包地址 (用于查询余额)
+    CHAIN_ID: int = 137                                    # 网络 ID (Polygon 为 137)
+    POLYGON_RPC_URL: str = "https://polygon-rpc.com"      # RPC 节点地址
+
+    # === 核心交易参数 (Roy 的手术刀) ===
+    ORDER_AMOUNT_USD: float = 50.0                         # 单次下注金额 (单位: USDC)
+    MAX_ACTIVE_POSITIONS_PER_CATEGORY: int = 5             # 同一类别的最大持仓数 (如：政治类最多买5单)
+    GLOBAL_MAX_POSITIONS: int = 10                         # 全局最大持仓总数 (同时最多运行多少单)
+
+    # === V7.0 策略过滤参数 ===
+    MIN_HOURS_TO_EXPIRY: float = 1.0                       # 最小剩余时间 (小时)，低于此时间不进场
+    MAX_HOURS_TO_EXPIRY: float = 12.0                      # 最大剩余时间 (小时)，只做即将结算的单子
+    ENTRY_PRICE_MIN: float = 0.94                          # 进场价格下限 (胜率 > 94%)
+    ENTRY_PRICE_MAX: float = 0.99                          # 进场价格上限
+
+    # === 动量与安全检查 ===
+    MOMENTUM_LOOKBACK_HOURS: int = 2                       # 动量回溯时间 (2小时)
+    MAX_PRICE_DROP_TOLERANCE: float = 0.02                 # 最大跌幅容忍度 (防止接飞刀)
+    LIQUIDITY_DEPTH_MULTIPLIER: int = 5                    # 流动性要求 (订单簿深度必须是下注额的 X 倍)
+
+    # === 敏感信息 (将从系统 Keyring 获取) ===
     EOA_PRIVATE_KEY: Optional[str] = None
     CLOB_API_KEY: Optional[str] = None
     CLOB_API_SECRET: Optional[str] = None
     CLOB_PASSPHRASE: Optional[str] = None
-    
-    ORDER_AMOUNT_USD: float = 50.0
-    MAX_ACTIVE_POSITIONS_PER_CATEGORY: int = 5
-    GLOBAL_MAX_POSITIONS: int = 10
-    
-    # V7.0 策略核心参数
-    # 时间窗口：仅允许 1h - 12h
-    MIN_HOURS_TO_EXPIRY: float = 1.0
-    MAX_HOURS_TO_EXPIRY: float = 12.0
-    
-    # 进场价格区间 (V7.0 激进版：0.94 - 0.99)
-    ENTRY_PRICE_MIN: float = 0.94
-    ENTRY_PRICE_MAX: float = 0.99
-    
-    # 动量过滤：拒绝接飞刀 (过去2小时高点 - 现价 > 0.02)
-    MOMENTUM_LOOKBACK_HOURS: int = 2
-    MAX_PRICE_DROP_TOLERANCE: float = 0.02
 
     # 严苛止损参数
     STOP_LOSS_L1_TRIGGER: float = 0.91 # 撤销止盈
