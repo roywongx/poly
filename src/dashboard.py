@@ -51,34 +51,67 @@ BOT_PROCESS_NAME = "src.main"
 def is_bot_running() -> bool:
     for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
         try:
-            if proc.info['cmdline'] and 'python' in proc.info['cmdline'][0] and any(BOT_PROCESS_NAME in cmd for cmd in proc.info['cmdline']):
+            cmdline = proc.info.get('cmdline')
+            if cmdline and any(BOT_PROCESS_NAME in cmd for cmd in cmdline):
+                # Ensure we don't count the dashboard itself if it's called with src.main (unlikely but safe)
+                if any("dashboard.py" in cmd for cmd in cmdline):
+                    continue
                 return True
-        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
             pass
     return False
 
 def start_bot():
-    if not is_bot_running():
-        # Start in background using subprocess
-        # Using Popen to keep it detached
+    print("\n[DASHBOARD] Triggering Bot Startup...")
+    
+    # 1. Force cleanup existing bot processes first
+    stop_bot()
+    import time
+    time.sleep(1) 
+    
+    try:
+        # 2. Resolve absolute paths
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        python_exe = os.path.join(base_dir, "venv", "Scripts", "python.exe")
+        
+        if not os.path.exists(python_exe):
+            python_exe = sys.executable # Use current python if venv not found
+        
+        print(f"[DASHBOARD] Executing: {python_exe} -m src.main")
+        
+        # 3. Launch with fresh console and environment
+        env = os.environ.copy()
+        env["PYTHONPATH"] = base_dir
+        
+        # Start bot as a completely independent process
         subprocess.Popen(
-            ["venv\Scripts\python.exe", "-m", "src.main"],
+            [python_exe, "-m", "src.main"],
+            cwd=base_dir,
+            env=env,
             creationflags=subprocess.CREATE_NEW_CONSOLE if os.name == 'nt' else 0,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
+            stdout=None, 
+            stderr=None
         )
+        print("[DASHBOARD] Bot process spawned successfully.")
+    except Exception as e:
+        print(f"[DASHBOARD] FATAL ERROR during startup: {e}")
 
 def stop_bot():
+    print("[DASHBOARD] Scanning for existing bot processes to stop...")
+    count = 0
     for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
         try:
-            if proc.info['cmdline'] and 'python' in proc.info['cmdline'][0] and any(BOT_PROCESS_NAME in cmd for cmd in proc.info['cmdline']):
+            cmdline = proc.info.get('cmdline')
+            if cmdline and any(BOT_PROCESS_NAME in cmd for cmd in cmdline):
+                print(f"[DASHBOARD] Stopping ghost process PID {proc.info['pid']}")
                 proc.terminate()
-                try:
-                    proc.wait(timeout=3)
-                except psutil.TimeoutExpired:
-                    proc.kill()
-        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                count += 1
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
             pass
+    if count > 0:
+        print(f"[DASHBOARD] Cleaned up {count} processes.")
+    else:
+        print("[DASHBOARD] No existing bot processes found.")
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
