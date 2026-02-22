@@ -35,13 +35,21 @@ class MarketScanner:
             for market in all_markets:
                 question = market.get('question', 'Unknown')
                 
-                # 0. 检查分类 (Category)
-                category = market.get('category', '')
+                # 0. 检查分类 (Category & Tags)
+                category = market.get('category') or ""
+                # 尝试从 Event 的标签中获取更准确的分类信息
+                tags = [t.get('label', '') for t in market.get('tags', [])] if isinstance(market.get('tags'), list) else []
+                combined_cat_info = (category + " " + " ".join(tags) + " " + market.get('question', '')).lower()
+                
                 excluded_cats = [c.strip().lower() for c in settings.EXCLUDED_CATEGORIES.split(',') if c.strip()]
-                if category.lower() in excluded_cats:
-                    logger.debug(f"[FILTERED] Category '{category}' is excluded: {question}")
-                    stats["filtered_category"] += 1
-                    continue
+                is_excluded = False
+                for ec in excluded_cats:
+                    if ec in combined_cat_info:
+                        logger.debug(f"[FILTERED] Category/Tag '{ec}' is excluded: {question}")
+                        stats["filtered_category"] += 1
+                        is_excluded = True
+                        break
+                if is_excluded: continue
 
                 # 1. 黑名单过滤
                 if self._is_poisoned(market):
@@ -93,6 +101,14 @@ class MarketScanner:
             end_time_str = market.get('end_date_iso')
             if not end_time_str: return False
             
+            # 处理不带 T 的日期格式 (如 2026-02-23)
+            if 'T' not in end_time_str:
+                end_time_str += 'T23:59:59'
+            
+            # 确保 ISO 格式带时区标识
+            if not end_time_str.endswith('Z') and '+' not in end_time_str:
+                end_time_str += 'Z'
+
             end_time = datetime.fromisoformat(end_time_str.replace('Z', '+00:00'))
             now = datetime.now(timezone.utc)
             hours_to_end = (end_time - now).total_seconds() / 3600
@@ -101,7 +117,8 @@ class MarketScanner:
             if settings.MIN_HOURS_TO_EXPIRY <= hours_to_end <= settings.MAX_HOURS_TO_EXPIRY:
                 return True
             return False
-        except Exception:
+        except Exception as e:
+            logger.debug(f"Time parsing error for {market.get('question')}: {e}")
             return False
 
     async def _check_safety_locks(self, market: Dict) -> bool:
@@ -171,9 +188,11 @@ class MarketScanner:
                     break # 没有更多数据了
                     
                 for event in events:
+                    event_tags = event.get('tags', [])
                     for m in event.get('markets', []):
                         # Flatten necessary fields
                         m['category'] = event.get('category', 'Unknown')
+                        m['tags'] = event_tags # 将事件的标签传递给市场对象
                         m['end_date_iso'] = m.get('endDateIso', m.get('endDate'))
                         m['condition_id'] = m.get('conditionId')
                         m['oneDayPriceChange'] = m.get('oneDayPriceChange', 0)
