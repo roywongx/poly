@@ -44,6 +44,7 @@ class Settings(BaseSettings):
     CB_SLEEP_HOURS: int = 24
 
     POISON_KEYWORDS: str = "dispute,uma,opinion,oscars,twitter,tweet,x.com,announce,live,next goal,minute,tom hanks,ellen degeneres,rumor,death,fake"
+    EXCLUDED_CATEGORIES: str = "Sports,Pop Culture"
     
     MAX_VOLATILITY_THRESHOLD: float = 0.05
     LIQUIDITY_DEPTH_MULTIPLIER: int = 5

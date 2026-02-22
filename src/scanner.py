@@ -12,9 +12,10 @@ class MarketScanner:
         """
         V7.0 极短线扫描逻辑：
         1. 过滤黑名单词汇
-        2. 时间窗口：仅 1h - 12h
-        3. 流动性深度 >= 5 * OrderAmount
-        4. 动量趋势过滤：拒绝下跌趋势
+        2. 过滤黑名单分类 (Categories)
+        3. 时间窗口：仅 1h - 12h
+        4. 流动性深度 >= 5 * OrderAmount
+        5. 动量趋势过滤：拒绝下跌趋势
         """
         logger.info("Scanning for Scalpel V7.0 opportunities...")
         try:
@@ -22,20 +23,36 @@ class MarketScanner:
             all_markets = await self.fetch_active_markets() 
             eligible = []
             
+            logger.debug(f"Fetched {len(all_markets)} total active markets from API.")
+            
             for market in all_markets:
+                question = market.get('question', 'Unknown')
+                
+                # 0. 检查分类 (Category)
+                category = market.get('category', '')
+                excluded_cats = [c.strip().lower() for c in settings.EXCLUDED_CATEGORIES.split(',') if c.strip()]
+                if category.lower() in excluded_cats:
+                    logger.debug(f"[FILTERED] Category '{category}' is excluded: {question}")
+                    continue
+
                 # 1. 黑名单过滤
                 if self._is_poisoned(market):
+                    logger.debug(f"[FILTERED] Poison keyword found: {question}")
                     continue
                 
                 # 2. 极短线时间窗口过滤
                 if not self._check_time_window(market):
+                    logger.debug(f"[FILTERED] Outside time window: {question}")
                     continue
                 
                 # 3. 核心：流动性与动量趋势检查 (Risk Checks)
                 if await self._check_safety_locks(market):
                     eligible.append(market)
-                    logger.success(f"TARGET ACQUIRED: {market.get('question')} | Expiring soon!")
+                    logger.success(f"🎯 TARGET ACQUIRED: {question} | Category: {category} | Expiring soon!")
+                else:
+                    logger.debug(f"[FILTERED] Failed safety locks (Liquidity/Momentum): {question}")
             
+            logger.info(f"Scan complete. Found {len(eligible)} eligible markets.")
             return eligible
         except Exception as e:
             logger.error(f"Scan failed: {e}")

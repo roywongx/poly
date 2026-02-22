@@ -111,6 +111,11 @@
                         <input type="text" id="cfg-POISON_KEYWORDS">
                         <span class="help-text">Comma-separated words to avoid</span>
                     </div>
+                    <div class="config-group">
+                        <label>EXCLUDED_CATEGORIES</label>
+                        <input type="text" id="cfg-EXCLUDED_CATEGORIES">
+                        <span class="help-text">Comma-separated categories to skip (e.g., Sports,Pop Culture)</span>
+                    </div>
                 </div>
             </div>
 
@@ -167,7 +172,7 @@
     <script>
         const CONFIG_KEYS = [
             "ORDER_AMOUNT_USD", "GLOBAL_MAX_POSITIONS", "MAX_ACTIVE_POSITIONS_PER_CATEGORY",
-            "ENTRY_PRICE_MIN", "MAX_HOURS_TO_EXPIRY", "POISON_KEYWORDS"
+            "ENTRY_PRICE_MIN", "MAX_HOURS_TO_EXPIRY", "POISON_KEYWORDS", "EXCLUDED_CATEGORIES"
         ];
 
         async function fetchConfig() {
