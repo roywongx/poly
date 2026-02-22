@@ -130,7 +130,9 @@ async def get_status():
             latest = max(files, key=os.path.getmtime)
             try:
                 with open(latest, "r", encoding="utf-8") as f:
-                    logs = f.readlines()[-1000:]
+                    lines = f.readlines()
+                    logs = lines[-1000:]
+                    # print(f">>> [DEBUG] Reading log: {latest}, lines: {len(logs)}")
             except: pass
 
     return JSONResponse({"status": "running" if running else "stopped", "state": state, "logs": logs})

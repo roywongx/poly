@@ -18,8 +18,12 @@ class PolyArbBot:
         if not os.path.exists("logs"):
             os.makedirs("logs")
         
-        # 记录日志到文件以便 Dashboard 读取
-        logger.add("logs/bot_{time}.log", rotation="10 MB", retention="7 days")
+        # 记录日志到文件以便 Dashboard 读取，并强制立即写入 (flush)
+        # 每次启动创建一个新文件
+        import datetime
+        log_name = f"logs/bot_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+        logger.add(log_name, rotation="10 MB", retention="7 days", enqueue=True)
+        logger.info(f"Log initialized: {log_name}")
             
         host = "https://clob.polymarket.com"
         
