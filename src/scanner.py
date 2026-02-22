@@ -125,39 +125,56 @@ class MarketScanner:
 
     async def fetch_active_markets(self) -> List[Dict]:
         import requests
+        from datetime import datetime, timezone, timedelta
         try:
-            url = "https://gamma-api.polymarket.com/events?active=true&closed=false&limit=100"
-            loop = asyncio.get_event_loop()
-            resp = await loop.run_in_executor(None, requests.get, url)
-            
-            if resp.status_code != 200:
-                logger.error(f"Gamma API returned {resp.status_code}: {resp.text}")
-                return []
-                
-            events = resp.json()
             markets = []
-            for event in events:
-                for m in event.get('markets', []):
-                    # Flatten necessary fields
-                    m['category'] = event.get('category', 'Unknown')
-                    m['end_date_iso'] = m.get('endDateIso', m.get('endDate'))
-                    m['condition_id'] = m.get('conditionId')
-                    m['oneDayPriceChange'] = m.get('oneDayPriceChange', 0)
+            limit = 100
+            offset = 0
+            max_pages = 50 # 允许拉取更多页，但由于有时间过滤，通常几页就结束了
+            
+            loop = asyncio.get_event_loop()
+            now = datetime.now(timezone.utc)
+            min_date = (now + timedelta(hours=settings.MIN_HOURS_TO_EXPIRY)).strftime('%Y-%m-%dT%H:%M:%SZ')
+            max_date = (now + timedelta(hours=settings.MAX_HOURS_TO_EXPIRY)).strftime('%Y-%m-%dT%H:%M:%SZ')
+            
+            logger.debug(f"Fetching events expiring between {min_date} and {max_date}")
+
+            for page in range(max_pages):
+                url = f"https://gamma-api.polymarket.com/events?active=true&closed=false&end_date_min={min_date}&end_date_max={max_date}&limit={limit}&offset={offset}"
+                resp = await loop.run_in_executor(None, requests.get, url)
+                
+                if resp.status_code != 200:
+                    logger.error(f"Gamma API returned {resp.status_code}: {resp.text}")
+                    break
                     
-                    # Extract YES token ID
-                    clob_ids = m.get('clobTokenIds')
-                    if clob_ids:
-                        import json
-                        try:
-                            parsed_ids = json.loads(clob_ids)
-                            if isinstance(parsed_ids, list) and len(parsed_ids) > 0:
-                                m['token_id'] = parsed_ids[0]
-                        except: pass
+                events = resp.json()
+                if not events:
+                    break # 没有更多数据了
                     
-                    if m.get('token_id'):
-                        m['time_class'] = "A"
-                        markets.append(m)
+                for event in events:
+                    for m in event.get('markets', []):
+                        # Flatten necessary fields
+                        m['category'] = event.get('category', 'Unknown')
+                        m['end_date_iso'] = m.get('endDateIso', m.get('endDate'))
+                        m['condition_id'] = m.get('conditionId')
+                        m['oneDayPriceChange'] = m.get('oneDayPriceChange', 0)
                         
+                        # Extract YES token ID
+                        clob_ids = m.get('clobTokenIds')
+                        if clob_ids:
+                            import json
+                            try:
+                                parsed_ids = json.loads(clob_ids)
+                                if isinstance(parsed_ids, list) and len(parsed_ids) > 0:
+                                    m['token_id'] = parsed_ids[0]
+                            except: pass
+                        
+                        if m.get('token_id'):
+                            m['time_class'] = "A"
+                            markets.append(m)
+                
+                offset += limit
+                
             return markets
         except Exception as e:
             logger.error(f"Failed to fetch from Gamma API: {e}")
