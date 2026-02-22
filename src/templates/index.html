@@ -6,80 +6,243 @@
     <title>PolyMarket Arb Bot Dashboard</title>
     <style>
         :root {
-            --primary-color: #2563eb;
-            --success-color: #16a34a;
-            --danger-color: #dc2626;
-            --bg-color: #f8fafc;
-            --card-bg: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
+            --apple-blue: #0071e3;
+            --apple-green: #34c759;
+            --apple-red: #ff3b30;
+            --apple-gray: #8e8e93;
+            --apple-bg: #f5f5f7;
+            --apple-card: rgba(255, 255, 255, 0.8);
+            --text-main: #1d1d1f;
+            --text-muted: #86868b;
+            --border-color: rgba(0, 0, 0, 0.1);
         }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 20px; background-color: var(--bg-color); color: var(--text-main); }
-        .container { max-width: 1400px; margin: auto; }
-        .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 2px solid var(--border-color); margin-bottom: 20px;}
-        h1 { margin: 0; color: var(--text-main); font-size: 1.8rem; }
-        .status-badge { padding: 6px 14px; border-radius: 20px; font-weight: 600; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 0.5px; }
-        .status-running { background-color: #dcfce7; color: var(--success-color); border: 1px solid #bbf7d0; }
-        .status-stopped { background-color: #fee2e2; color: var(--danger-color); border: 1px solid #fecaca; }
-        
-        .controls button { padding: 10px 24px; font-size: 15px; font-weight: 600; cursor: pointer; border: none; border-radius: 6px; margin-left: 12px; transition: opacity 0.2s, transform 0.1s; }
-        .controls button:active { transform: scale(0.98); }
-        .btn-start { background-color: var(--success-color); color: white; box-shadow: 0 4px 6px -1px rgba(22, 163, 74, 0.2); }
-        .btn-start:hover { opacity: 0.9; }
-        .btn-stop { background-color: var(--danger-color); color: white; box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.2); }
-        .btn-stop:hover { opacity: 0.9; }
-        .btn-lang { background-color: #e2e8f0; color: var(--text-main); padding: 8px 16px; border-radius: 20px; font-size: 14px; box-shadow: none; border: 1px solid #cbd5e1; }
-        .btn-lang:hover { background-color: #cbd5e1; }
 
-        .layout-grid { display: grid; grid-template-columns: 350px 1fr; gap: 24px; }
-        .right-column { display: flex; flex-direction: column; gap: 24px; }
-        .grid-half { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Myriad Set Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+            background-color: var(--apple-bg);
+            color: var(--text-main);
+            -webkit-font-smoothing: antialiased;
+        }
 
-        .card { background: var(--card-bg); padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
-        .card h2 { margin-top: 0; border-bottom: 2px solid var(--bg-color); padding-bottom: 12px; margin-bottom: 20px; font-size: 1.25rem; color: var(--text-main); display: flex; justify-content: space-between; align-items: center;}
-        
-        /* Table Styles */
-        .table-container { overflow-x: auto; max-height: 250px; overflow-y: auto;}
-        table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color); }
-        th { background-color: var(--bg-color); font-weight: 600; color: var(--text-muted); position: sticky; top: 0;}
-        tbody tr:hover { background-color: var(--bg-color); }
+        .container {
+            max-width: 1440px;
+            margin: auto;
+        }
 
-        /* Log Styles */
-        .log-container { background: #0f172a; color: #34d399; padding: 16px; border-radius: 8px; height: 350px; overflow-y: auto; font-family: 'Consolas', 'Monaco', monospace; white-space: pre-wrap; font-size: 13px; line-height: 1.5; box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06); }
-        
-        /* Form Styles */
-        .config-group { margin-bottom: 16px; }
-        .config-group label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.9rem; color: var(--text-main); }
-        .config-group input[type="text"], .config-group input[type="number"] { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; box-sizing: border-box; transition: border-color 0.2s; }
-        .config-group input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
-        .config-group .help-text { display: block; font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
-        
-        .btn-save { background-color: var(--primary-color); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: background-color 0.2s; }
-        .btn-save:hover { background-color: #1d4ed8; }
-        
-        .toast { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 12px 24px; border-radius: 8px; display: none; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); z-index: 1000;}
+        /* Glassmorphism Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding: 0 10px;
+        }
 
-        /* Tag Styles */
-        .badge-tag { font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
-        .tag-keyword { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
-        .tag-category { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+        h1 {
+            margin: 0;
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            letter-spacing: 0.2px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .status-running { background-color: rgba(52, 199, 89, 0.15); color: var(--apple-green); border: 1px solid rgba(52, 199, 89, 0.2); }
+        .status-stopped { background-color: rgba(255, 59, 48, 0.1); color: var(--apple-red); border: 1px solid rgba(255, 59, 48, 0.2); }
+
+        .btn {
+            padding: 10px 22px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            border-radius: 10px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary { background-color: var(--apple-blue); color: white; }
+        .btn-primary:hover { background-color: #0077ed; transform: scale(1.02); }
+        
+        .btn-success { background-color: var(--apple-green); color: white; }
+        .btn-success:hover { background-color: #2fb350; transform: scale(1.02); }
+
+        .btn-danger { background-color: var(--apple-red); color: white; }
+        .btn-danger:hover { background-color: #e6352b; transform: scale(1.02); }
+
+        .btn-ghost { background-color: rgba(0, 0, 0, 0.05); color: var(--text-main); }
+        .btn-ghost:hover { background-color: rgba(0, 0, 0, 0.1); }
+
+        /* Grid Layout */
+        .layout-grid {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 30px;
+        }
+
+        .card {
+            background: var(--apple-card);
+            backdrop-filter: blur(20px);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Form Styling */
+        .config-group { margin-bottom: 20px; }
+        .config-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 15px;
+            background: rgba(255, 255, 255, 0.5);
+            transition: all 0.2s;
+            box-sizing: border-box;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--apple-blue);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
+        }
+
+        .help-text { display: block; font-size: 0.8rem; color: var(--apple-gray); margin-top: 6px; line-height: 1.4; }
+
+        /* Presets Panel */
+        .preset-section {
+            margin-top: 25px;
+            padding: 20px;
+            background: rgba(0, 113, 227, 0.03);
+            border-radius: 15px;
+            border: 1px solid rgba(0, 113, 227, 0.05);
+        }
+
+        .preset-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--apple-blue);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .preset-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+
+        .chip-btn {
+            background: white;
+            border: 1px solid var(--border-color);
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .chip-btn:hover { background: var(--apple-blue); color: white; border-color: var(--apple-blue); }
+
+        /* Tags Display */
+        .tag-display { margin-top: 30px; border-top: 1px solid var(--border-color); padding-top: 25px; }
+        .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+        .badge-tag { font-size: 0.75rem; padding: 4px 10px; border-radius: 6px; font-weight: 600; }
+        .tag-keyword { background: rgba(255, 59, 48, 0.1); color: var(--apple-red); }
+        .tag-category { background: rgba(0, 113, 227, 0.1); color: var(--apple-blue); }
+
+        /* Logs and Tables */
+        .table-container { overflow-x: auto; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th { text-align: left; padding: 12px; color: var(--apple-gray); font-weight: 500; border-bottom: 1px solid var(--border-color); }
+        td { padding: 14px 12px; border-bottom: 1px dotted var(--border-color); }
+        
+        .log-container {
+            background: #1c1c1e;
+            color: #d1d1d6;
+            padding: 20px;
+            border-radius: 16px;
+            height: 500px;
+            overflow-y: auto;
+            font-family: "SF Mono", "SFMono-Regular", ui-monospace, monospace;
+            font-size: 12.5px;
+            line-height: 1.6;
+            box-shadow: inset 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 20px;
+            display: none;
+            z-index: 1000;
+            font-weight: 500;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .grid-half { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .right-column { display: flex; flex-direction: column; gap: 30px; }
+
+        @media (max-width: 1000px) {
+            .layout-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <div>
-                <h1>PolyMarket Arb Bot</h1>
-                <div style="font-size: 0.9rem; color: var(--text-muted); margin-top: 4px;" data-i18n="subtitle">Scalpel V7.0 Dashboard</div>
+                <h1 data-i18n="title">PolyMarket Arb Bot</h1>
+                <div style="font-size: 0.95rem; color: var(--text-muted); margin-top: 6px; font-weight: 500;" data-i18n="subtitle">Scalpel V7.0 Dashboard</div>
             </div>
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <button class="btn-lang" onclick="toggleLanguage()" id="lang-btn">🇺🇸 EN</button>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <button class="btn btn-ghost" onclick="toggleLanguage()" id="lang-btn">🇺🇸 EN</button>
                 <div id="status-indicator" class="status-badge status-stopped" data-i18n="status_checking">Checking...</div>
-                <div class="controls">
-                    <button class="btn-start" onclick="controlBot('start')" data-i18n="btn_start">Start Bot</button>
-                    <button class="btn-stop" onclick="controlBot('stop')" data-i18n="btn_stop">Stop Bot</button>
+                <div class="controls" style="display: flex; gap: 10px;">
+                    <button class="btn btn-success" onclick="controlBot('start')">
+                        <span data-i18n="btn_start">Start Bot</span>
+                    </button>
+                    <button class="btn btn-danger" onclick="controlBot('stop')">
+                        <span data-i18n="btn_stop">Stop Bot</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -87,207 +250,215 @@
         <div class="layout-grid">
             <!-- Left Column: Config -->
             <div class="card">
-                <h2><span data-i18n="config_title">Configuration</span> <button class="btn-save" onclick="saveAllConfig()" data-i18n="btn_save">Save All</button></h2>
+                <h2>
+                    <span data-i18n="config_title">Configuration</span>
+                    <button class="btn btn-primary" onclick="saveAllConfig()" style="padding: 6px 16px; font-size: 13px;">
+                        <span data-i18n="btn_save">Save All</span>
+                    </button>
+                </h2>
+                
                 <div id="config-form">
                     <div class="config-group">
                         <label data-i18n="lbl_order_amount">ORDER_AMOUNT_USD</label>
                         <input type="number" id="cfg-ORDER_AMOUNT_USD" step="1">
                         <span class="help-text" data-i18n="help_order_amount">Size of each bet in USDC (1-5% of bankroll)</span>
                     </div>
-                    <div class="grid-half" style="gap:10px;">
+
+                    <div class="grid-half">
                         <div class="config-group">
-                            <label data-i18n="lbl_global_max">GLOBAL_MAX_POSITIONS</label>
-                            <input type="number" id="cfg-GLOBAL_MAX_POSITIONS" step="1">
+                            <label data-i18n="lbl_global_max">GLOBAL MAX</label>
+                            <input type="number" id="cfg-GLOBAL_MAX_POSITIONS">
                         </div>
                         <div class="config-group">
-                            <label data-i18n="lbl_cat_max">MAX_PER_CATEGORY</label>
-                            <input type="number" id="cfg-MAX_ACTIVE_POSITIONS_PER_CATEGORY" step="1">
+                            <label data-i18n="lbl_cat_max">PER CATEGORY</label>
+                            <input type="number" id="cfg-MAX_ACTIVE_POSITIONS_PER_CATEGORY">
                         </div>
                     </div>
-                    <div class="grid-half" style="gap:10px;">
+
+                    <div class="grid-half">
                         <div class="config-group">
-                            <label data-i18n="lbl_price_min">ENTRY_PRICE_MIN</label>
+                            <label data-i18n="lbl_price_min">ENTRY MIN</label>
                             <input type="number" id="cfg-ENTRY_PRICE_MIN" step="0.01">
                         </div>
                         <div class="config-group">
-                            <label data-i18n="lbl_max_hours">MAX_HOURS</label>
+                            <label data-i18n="lbl_max_hours">MAX HOURS</label>
                             <input type="number" id="cfg-MAX_HOURS_TO_EXPIRY" step="0.5">
                         </div>
                     </div>
-                    <div class="grid-half" style="gap:10px;">
-                        <div class="config-group">
-                            <label data-i18n="lbl_sl_l1">STOP_LOSS_L1</label>
-                            <input type="number" id="cfg-STOP_LOSS_L1_TRIGGER" step="0.01">
-                        </div>
-                        <div class="config-group">
-                            <label data-i18n="lbl_sl_l2">STOP_LOSS_L2</label>
-                            <input type="number" id="cfg-STOP_LOSS_L2_TRIGGER" step="0.01">
-                        </div>
-                    </div>
+
                     <div class="config-group">
-                        <label data-i18n="lbl_poison">POISON_KEYWORDS</label>
+                        <label data-i18n="lbl_poison">POISON KEYWORDS</label>
                         <input type="text" id="cfg-POISON_KEYWORDS" oninput="renderTags()">
-                        <span class="help-text" data-i18n="help_poison">Comma-separated words to avoid</span>
                     </div>
+
                     <div class="config-group">
-                        <label data-i18n="lbl_excluded">EXCLUDED_CATEGORIES</label>
+                        <label data-i18n="lbl_excluded">EXCLUDED CATEGORIES</label>
                         <input type="text" id="cfg-EXCLUDED_CATEGORIES" oninput="renderTags()">
-                        <span class="help-text" data-i18n="help_excluded">Comma-separated categories to skip</span>
                     </div>
                 </div>
 
-                <div style="margin-top: 20px; background: #fffbeb; padding: 15px; border-radius: 8px; border: 1px solid #fef3c7;">
-                    <h3 style="font-size: 0.85rem; color: #92400e; text-transform: uppercase; margin-top:0; margin-bottom: 10px;" data-i18n="vetted_title">💡 Recommended Safety Presets</h3>
-                    <div style="font-size: 0.8rem; line-height: 1.4; color: #b45309; margin-bottom: 10px;" data-i18n="vetted_desc">Based on our research, these categories are highly dangerous:</div>
-                    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
-                        <button class="badge-tag tag-category" onclick="addExcluded('Sports')" style="cursor:pointer; border:1px solid #bae6fd;">Sports</button>
-                        <button class="badge-tag tag-category" onclick="addExcluded('Pop Culture')" style="cursor:pointer; border:1px solid #bae6fd;">Pop Culture</button>
-                        <button class="badge-tag tag-category" onclick="addExcluded('Entertainment')" style="cursor:pointer; border:1px solid #bae6fd;">Entertainment</button>
-                        <button class="badge-tag tag-category" onclick="addExcluded('Politics')" style="cursor:pointer; border:1px solid #bae6fd;">Politics</button>
+                <!-- Presets Panel -->
+                <div class="preset-section">
+                    <div class="preset-title">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        <span data-i18n="vetted_title">Safety Presets</span>
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <div style="font-size: 0.75rem; color: var(--apple-gray); margin-bottom: 8px;" data-i18n="vetted_cat_desc">Quick-add dangerous categories:</div>
+                        <div class="preset-chips">
+                            <button class="chip-btn" onclick="addValue('EXCLUDED_CATEGORIES', 'Sports')">Sports</button>
+                            <button class="chip-btn" onclick="addValue('EXCLUDED_CATEGORIES', 'Pop Culture')">Pop Culture</button>
+                            <button class="chip-btn" onclick="addValue('EXCLUDED_CATEGORIES', 'Politics')">Politics</button>
+                            <button class="chip-btn" onclick="addValue('EXCLUDED_CATEGORIES', 'Entertainment')">Entertainment</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div style="font-size: 0.75rem; color: var(--apple-gray); margin-bottom: 8px;" data-i18n="vetted_kw_desc">Quick-add poison words:</div>
+                        <div class="preset-chips">
+                            <button class="chip-btn" onclick="addValue('POISON_KEYWORDS', 'UMA')">UMA</button>
+                            <button class="chip-btn" onclick="addValue('POISON_KEYWORDS', 'Dispute')">Dispute</button>
+                            <button class="chip-btn" onclick="addValue('POISON_KEYWORDS', 'Twitter')">Twitter</button>
+                            <button class="chip-btn" onclick="addValue('POISON_KEYWORDS', 'Rumor')">Rumor</button>
+                            <button class="chip-btn" onclick="addValue('POISON_KEYWORDS', 'Fake')">Fake</button>
+                        </div>
                     </div>
                 </div>
 
-                <div style="margin-top: 24px; border-top: 1px solid var(--border-color); padding-top: 20px;">
-                    <h3 style="font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;" data-i18n="safety_title">Active Safety Protection</h3>
-                    <div id="active-keywords-tags" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px;"></div>
-                    <div id="active-categories-tags" style="display: flex; flex-wrap: wrap; gap: 6px;"></div>
+                <div class="tag-display">
+                    <h3 style="font-size: 0.8rem; color: var(--apple-gray); margin-bottom: 12px; text-transform: uppercase;" data-i18n="safety_title">Active Protection</h3>
+                    <div id="active-keywords-tags" class="tag-row"></div>
+                    <div id="active-categories-tags" class="tag-row"></div>
                 </div>
             </div>
 
             <!-- Right Column: Monitoring -->
             <div class="right-column">
-                <div class="grid-half">
-                    <div class="card">
-                        <h2 data-i18n="active_positions_title">Active Positions</h2>
-                        <div class="table-container">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th data-i18n="th_token_id">Token ID</th>
-                                        <th data-i18n="th_entry_price">Entry Price</th>
-                                        <th data-i18n="th_l2_timer">L2 Timer</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="positions-body">
-                                    <tr><td colspan="3" style="text-align: center;" data-i18n="loading">Loading...</td></tr>
-                                </tbody>
-                            </table>
+                <div class="card" style="padding: 20px;">
+                    <div class="grid-half" style="gap: 30px;">
+                        <div>
+                            <h2 style="font-size: 1.1rem;" data-i18n="active_positions_title">Active Positions</h2>
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th data-i18n="th_token_id">Token</th>
+                                            <th data-i18n="th_entry_price">Entry</th>
+                                            <th data-i18n="th_l2_timer">L2 Timer</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="positions-body"></tbody>
+                                </table>
+                            </div>
                         </div>
-                    </div>
-
-                    <div class="card">
-                        <h2 data-i18n="active_orders_title">Active Entry Orders</h2>
-                        <div class="table-container">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th data-i18n="th_order_id">Order ID</th>
-                                        <th data-i18n="th_market">Market</th>
-                                        <th data-i18n="th_token_id">Token ID</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="orders-body">
-                                    <tr><td colspan="3" style="text-align: center;" data-i18n="loading">Loading...</td></tr>
-                                </tbody>
-                            </table>
+                        <div>
+                            <h2 style="font-size: 1.1rem;" data-i18n="active_orders_title">Active Orders</h2>
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th data-i18n="th_order_id">ID</th>
+                                            <th data-i18n="th_market">Market</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="orders-body"></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="card">
-                    <h2 data-i18n="live_logs_title">Live Logs</h2>
+                    <h2 data-i18n="live_logs_title">System Intelligence</h2>
                     <div id="log-container" class="log-container" data-i18n="loading_logs">Loading logs...</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="toast" class="toast">Settings Saved! Please restart bot to apply.</div>
+    <div id="toast" class="toast"></div>
 
     <script>
         const translations = {
             en: {
-                subtitle: "Scalpel V7.0 Dashboard",
-                btn_start: "Start Bot",
-                btn_stop: "Stop Bot",
-                config_title: "Configuration",
-                btn_save: "Save All",
-                lbl_order_amount: "ORDER_AMOUNT_USD",
-                lbl_global_max: "GLOBAL_MAX",
-                lbl_cat_max: "MAX_PER_CAT",
-                lbl_price_min: "ENTRY_MIN",
-                lbl_max_hours: "MAX_HOURS",
-                lbl_sl_l1: "STOP_LOSS_L1",
-                lbl_sl_l2: "STOP_LOSS_L2",
-                lbl_poison: "POISON_KEYWORDS",
-                lbl_excluded: "EXCLUDED_CATEGORIES",
-                help_order_amount: "Size of each bet in USDC (1-5% of bankroll)",
-                help_poison: "Comma-separated words to avoid",
-                help_excluded: "Comma-separated categories to skip",
-                vetted_title: "💡 Recommended Safety Presets",
-                vetted_desc: "Based on our research, these categories are highly dangerous:",
-                safety_title: "Active Safety Protection",
-                active_positions_title: "Active Positions",
-                active_orders_title: "Active Entry Orders",
-                th_token_id: "Token ID",
-                th_entry_price: "Entry Price",
-                th_l2_timer: "L2 Timer",
-                th_order_id: "Order ID",
-                th_market: "Market",
-                loading: "Loading...",
-                live_logs_title: "Live Logs",
-                loading_logs: "Loading logs...",
-                no_logs: "No logs available. Start the bot to see output.",
-                no_positions: "No active positions",
-                no_orders: "No active entry orders",
-                toast_saved: "Settings Saved! Restart bot to apply changes.",
-                toast_start: "Bot starting...",
-                toast_stop: "Bot stopping...",
+                title: "PolyMarket Scalpel",
+                subtitle: "Quant Arbitrage Engine V7.0",
+                btn_start: "Initialize Engine",
+                btn_stop: "Graceful Shutdown",
+                config_title: "Strategy Core",
+                btn_save: "Apply Changes",
+                lbl_order_amount: "Order Size (USDC)",
+                lbl_global_max: "Global Max",
+                lbl_cat_max: "Category Max",
+                lbl_price_min: "Min Probability",
+                lbl_max_hours: "Time Window (h)",
+                lbl_poison: "Poison Keywords",
+                lbl_excluded: "Excluded Categories",
+                help_order_amount: "Recommend 1-5% of total bankroll.",
+                vetted_title: "Safety Presets",
+                vetted_cat_desc: "Quick-add high-risk categories:",
+                vetted_kw_desc: "Quick-add resolution risk words:",
+                safety_title: "Shield Status",
+                active_positions_title: "Portfolio",
+                active_orders_title: "Pending",
+                th_token_id: "Token",
+                th_entry_price: "Cost",
+                th_l2_timer: "L2 Stop",
+                th_order_id: "ID",
+                th_market: "Target",
+                loading: "Searching...",
+                live_logs_title: "Live Intelligence Stream",
+                loading_logs: "Syncing logs...",
+                no_logs: "Engine standby. Start to view stream.",
+                no_positions: "No active exposure",
+                no_orders: "No pending orders",
+                toast_saved: "Strategy Updated. Restart engine to sync.",
+                toast_start: "Booting system...",
+                toast_stop: "Shutting down...",
                 status_checking: "Checking...",
-                status_running: "RUNNING",
-                status_stopped: "STOPPED",
+                status_running: "ENGINE ACTIVE",
+                status_stopped: "STANDBY",
                 status_offline: "API OFFLINE"
             },
             zh: {
-                subtitle: "手术刀 V7.0 控制面板",
-                btn_start: "启动机器人",
-                btn_stop: "停止机器人",
-                config_title: "策略配置",
-                btn_save: "保存配置",
-                lbl_order_amount: "单笔下注 (USDC)",
-                lbl_global_max: "全局最大仓位",
-                lbl_cat_max: "同话题上限",
-                lbl_price_min: "进场价格底线",
-                lbl_max_hours: "最大剩余时间",
-                lbl_sl_l1: "预警线 (L1)",
-                lbl_sl_l2: "硬止损 (L2)",
-                lbl_poison: "绝对不买关键词",
-                lbl_excluded: "排除的高危分类",
-                help_order_amount: "单次下注金额 (建议总资金 1-5%)",
-                help_poison: "遇到这些关键词绝对不买 (逗号隔开)",
-                help_excluded: "排除这些高危分类 (逗号隔开)",
-                vetted_title: "💡 推荐的安全预设",
-                vetted_desc: "根据之前的多轮分析，这些分类属于高风险区域：",
-                safety_title: "正在生效的安全防御",
-                active_positions_title: "活跃持仓 (已买入)",
-                active_orders_title: "活动挂单 (等待成交)",
-                th_token_id: "代币 ID",
-                th_entry_price: "成本价",
-                th_l2_timer: "止损倒计时",
-                th_order_id: "订单 ID",
+                title: "PolyMarket 手术刀",
+                subtitle: "量化套利引擎 V7.0",
+                btn_start: "启动引擎",
+                btn_stop: "安全停止",
+                config_title: "核心策略配置",
+                btn_save: "应用修改",
+                lbl_order_amount: "单笔投资 (USDC)",
+                lbl_global_max: "全局总仓位",
+                lbl_cat_max: "单话题上限",
+                lbl_price_min: "进场胜率底线",
+                lbl_max_hours: "时间窗口 (小时)",
+                lbl_poison: "违禁词黑名单",
+                lbl_excluded: "排除的分类",
+                help_order_amount: "建议设置为总资金的 1%-5%。",
+                vetted_title: "安全专家预设",
+                vetted_cat_desc: "一键排除高风险分类：",
+                vetted_kw_desc: "一键添加结算风险词：",
+                safety_title: "防御盾状态",
+                active_positions_title: "当前持仓",
+                active_orders_title: "活动挂单",
+                th_token_id: "代币",
+                th_entry_price: "成本",
+                th_l2_timer: "止损计时",
+                th_order_id: "编号",
                 th_market: "目标市场",
-                loading: "加载中...",
-                live_logs_title: "系统实时日志",
-                loading_logs: "正在加载日志...",
-                no_logs: "暂无日志。请点击启动按钮以查看输出。",
-                no_positions: "当前无活跃持仓",
-                no_orders: "当前无排队挂单",
-                toast_saved: "配置已保存！请重启机器人以生效。",
-                toast_start: "正在启动机器人...",
-                toast_stop: "正在安全关闭机器人...",
+                loading: "扫描中...",
+                live_logs_title: "实时情报流",
+                loading_logs: "正在同步日志...",
+                no_logs: "系统待命。点击启动以查看情报。",
+                no_positions: "当前无风险敞口",
+                no_orders: "当前无挂单",
+                toast_saved: "策略已更新。请重启引擎以应用。",
+                toast_start: "正在初始化系统...",
+                toast_stop: "正在安全关闭...",
                 status_checking: "检查中...",
-                status_running: "运行中",
-                status_stopped: "已停止",
+                status_running: "引擎运行中",
+                status_stopped: "待命",
                 status_offline: "离线"
             }
         };
@@ -313,8 +484,7 @@
 
         const CONFIG_KEYS = [
             "ORDER_AMOUNT_USD", "GLOBAL_MAX_POSITIONS", "MAX_ACTIVE_POSITIONS_PER_CATEGORY",
-            "ENTRY_PRICE_MIN", "MAX_HOURS_TO_EXPIRY", "STOP_LOSS_L1_TRIGGER", "STOP_LOSS_L2_TRIGGER",
-            "POISON_KEYWORDS", "EXCLUDED_CATEGORIES"
+            "ENTRY_PRICE_MIN", "MAX_HOURS_TO_EXPIRY", "POISON_KEYWORDS", "EXCLUDED_CATEGORIES"
         ];
 
         async function fetchConfig() {
@@ -328,31 +498,22 @@
                     }
                 });
                 renderTags();
-            } catch (e) {
-                console.error("Failed to load config", e);
-            }
+            } catch (e) { console.error(e); }
         }
 
         function renderTags() {
-            const kwEl = document.getElementById('cfg-POISON_KEYWORDS');
-            const catEl = document.getElementById('cfg-EXCLUDED_CATEGORIES');
-            if(!kwEl || !catEl) return;
-
-            const kwInput = kwEl.value || "";
-            const catInput = catEl.value || "";
+            const kwInput = document.getElementById('cfg-POISON_KEYWORDS').value;
+            const catInput = document.getElementById('cfg-EXCLUDED_CATEGORIES').value;
             
-            const kwContainer = document.getElementById('active-keywords-tags');
-            const catContainer = document.getElementById('active-categories-tags');
-            
-            kwContainer.innerHTML = kwInput.split(',').filter(t => t.trim()).map(t => `<span class="badge-tag tag-keyword">${t.trim()}</span>`).join('');
-            catContainer.innerHTML = catInput.split(',').filter(t => t.trim()).map(t => `<span class="badge-tag tag-category">${t.trim()}</span>`).join('');
+            document.getElementById('active-keywords-tags').innerHTML = kwInput.split(',').filter(t => t.trim()).map(t => `<span class="badge-tag tag-keyword">${t.trim()}</span>`).join('');
+            document.getElementById('active-categories-tags').innerHTML = catInput.split(',').filter(t => t.trim()).map(t => `<span class="badge-tag tag-category">${t.trim()}</span>`).join('');
         }
 
-        function addExcluded(cat) {
-            const el = document.getElementById('cfg-EXCLUDED_CATEGORIES');
+        function addValue(id, val) {
+            const el = document.getElementById(`cfg-${id}`);
             const current = el.value.split(',').map(t => t.trim()).filter(t => t);
-            if (!current.includes(cat)) {
-                current.push(cat);
+            if (!current.includes(val)) {
+                current.push(val);
                 el.value = current.join(',');
                 renderTags();
             }
@@ -371,9 +532,7 @@
                     }
                 }
                 showToast(translations[currentLang].toast_saved);
-            } catch (e) {
-                alert("Failed to save configuration.");
-            }
+            } catch (e) { alert("Error saving."); }
         }
 
         function showToast(msg) {
@@ -402,31 +561,18 @@
                     const rawLogs = data.logs.join('');
                     if (logContainer.getAttribute('data-raw') !== rawLogs) {
                         logContainer.setAttribute('data-raw', rawLogs);
-                        
-                        const formattedLogs = data.logs.map(line => {
-                            let colorLine = line
-                                .replace(/</g, "&lt;").replace(/>/g, "&gt;") 
-                                .replace(/\| INFO\s+\|/g, '<span style="color: #60a5fa">| INFO     |</span>')
-                                .replace(/\| DEBUG\s+\|/g, '<span style="color: #9ca3af">| DEBUG    |</span>')
-                                .replace(/\| SUCCESS\s+\|/g, '<span style="color: #34d399; font-weight:bold">| SUCCESS  |</span>')
-                                .replace(/\| WARNING\s+\|/g, '<span style="color: #fbbf24">| WARNING  |</span>')
-                                .replace(/\| ERROR\s+\|/g, '<span style="color: #ef4444; font-weight:bold">| ERROR    |</span>')
-                                .replace(/\| CRITICAL\s+\|/g, '<span style="color: #b91c1c; font-weight:bold; background: #fee2e2">| CRITICAL |</span>');
-                            
-                            if (colorLine.includes('[FILTERED]')) {
-                                colorLine = colorLine.replace('[FILTERED]', '<span style="color: #9ca3af">[FILTERED]</span>');
-                            }
-                            if (colorLine.includes('🎯 TARGET ACQUIRED')) {
-                                colorLine = `<span style="color: #34d399">${colorLine}</span>`;
-                            }
-                            return colorLine;
+                        logContainer.innerHTML = data.logs.map(line => {
+                            return line
+                                .replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                                .replace(/\| INFO\s+\|/g, '<span style="color: #0071e3">| INFO |</span>')
+                                .replace(/\| SUCCESS\s+\|/g, '<span style="color: #34c759; font-weight:600">| SUCCESS |</span>')
+                                .replace(/\| WARNING\s+\|/g, '<span style="color: #ff9500">| WARN |</span>')
+                                .replace(/\| ERROR\s+\|/g, '<span style="color: #ff3b30">| ERR |</span>')
+                                .replace(/🎯 TARGET ACQUIRED/g, '<span style="color: #34c759; font-weight:700">🎯 TARGET ACQUIRED</span>')
+                                .replace(/\[FILTERED\]/g, '<span style="color: #8e8e93">[FILTERED]</span>');
                         }).join('');
-
-                        logContainer.innerHTML = formattedLogs;
                         logContainer.scrollTop = logContainer.scrollHeight;
                     }
-                } else {
-                    logContainer.innerHTML = translations[currentLang].no_logs;
                 }
 
                 if (data.state) {
@@ -435,54 +581,34 @@
                         posBody.innerHTML = Object.entries(data.state.active_positions).map(([tokenId, pos]) => `
                             <tr>
                                 <td title="${tokenId}">${tokenId.substring(0, 8)}...</td>
-                                <td><span style="color:var(--success-color); font-weight:bold;">${pos.entry_price}</span></td>
-                                <td>${pos.l2_trigger_time ? `<span style="color:var(--danger-color)">${new Date(pos.l2_trigger_time * 1000).toLocaleTimeString()}</span>` : '-'}</td>
+                                <td><span style="color:var(--apple-green); font-weight:600;">${pos.entry_price}</span></td>
+                                <td>${pos.l2_trigger_time ? `<span style="color:var(--apple-red)">Active</span>` : '-'}</td>
                             </tr>
                         `).join('');
                     } else {
-                        posBody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">${translations[currentLang].no_positions}</td></tr>`;
+                        posBody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--apple-gray); padding: 20px;">${translations[currentLang].no_positions}</td></tr>`;
                     }
 
                     const ordBody = document.getElementById('orders-body');
                     if (data.state.active_entry_orders && Object.keys(data.state.active_entry_orders).length > 0) {
                         ordBody.innerHTML = Object.entries(data.state.active_entry_orders).map(([orderId, ord]) => `
                             <tr>
-                                <td title="${orderId}">${orderId.substring(0, 8)}...</td>
-                                <td title="${ord.market_name}">${(ord.market_name || '').substring(0, 25)}...</td>
-                                <td title="${ord.token_id}">${ord.token_id.substring(0, 8)}...</td>
+                                <td title="${orderId}">${orderId.substring(0, 6)}</td>
+                                <td title="${ord.market_name}">${(ord.market_name || '').substring(0, 20)}...</td>
                             </tr>
                         `).join('');
                     } else {
-                        ordBody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">${translations[currentLang].no_orders}</td></tr>`;
+                        ordBody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: var(--apple-gray); padding: 20px;">${translations[currentLang].no_orders}</td></tr>`;
                     }
                 }
-
             } catch (error) {
-                console.error("Error fetching status:", error);
-                const statusIndicator = document.getElementById('status-indicator');
-                statusIndicator.textContent = translations[currentLang].status_offline;
-                statusIndicator.className = 'status-badge status-stopped';
+                document.getElementById('status-indicator').textContent = translations[currentLang].status_offline;
             }
         }
 
-        async function controlBot(action) {
-            try {
-                await fetch(`/api/bot/${action}`, { method: 'POST' });
-                if(action === 'start') {
-                    showToast(translations[currentLang].toast_start);
-                } else {
-                    showToast(translations[currentLang].toast_stop);
-                }
-                setTimeout(fetchStatus, 1000); 
-            } catch (error) {
-                alert(`Failed to ${action} bot. Check console.`);
-            }
-        }
-
-        // Initialize
         applyLanguage();
         fetchConfig();
-        setInterval(fetchStatus, 3000); 
+        setInterval(fetchStatus, 3000);
     </script>
 </body>
 </html>
