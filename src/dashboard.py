@@ -106,9 +106,9 @@ async def get_status():
             latest_log = max(log_files, key=os.path.getmtime)
             try:
                 with open(latest_log, "r", encoding="utf-8") as f:
-                    # Get last 50 lines
+                    # Get last 200 lines for better context
                     lines = f.readlines()
-                    logs = lines[-50:]
+                    logs = lines[-200:]
             except Exception:
                 pass
 

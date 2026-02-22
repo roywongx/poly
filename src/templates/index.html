@@ -256,13 +256,36 @@
                 // Update Logs
                 const logContainer = document.getElementById('log-container');
                 if (data.logs && data.logs.length > 0) {
-                    const newLogText = data.logs.join('');
-                    if (logContainer.textContent !== newLogText) {
-                        logContainer.textContent = newLogText;
+                    const rawLogs = data.logs.join('');
+                    if (logContainer.getAttribute('data-raw') !== rawLogs) {
+                        logContainer.setAttribute('data-raw', rawLogs);
+                        
+                        // Parse colors
+                        const formattedLogs = data.logs.map(line => {
+                            let colorLine = line
+                                .replace(/</g, "&lt;").replace(/>/g, "&gt;") // escape HTML
+                                .replace(/\| INFO\s+\|/g, '<span style="color: #60a5fa">| INFO     |</span>')
+                                .replace(/\| DEBUG\s+\|/g, '<span style="color: #9ca3af">| DEBUG    |</span>')
+                                .replace(/\| SUCCESS\s+\|/g, '<span style="color: #34d399; font-weight:bold">| SUCCESS  |</span>')
+                                .replace(/\| WARNING\s+\|/g, '<span style="color: #fbbf24">| WARNING  |</span>')
+                                .replace(/\| ERROR\s+\|/g, '<span style="color: #ef4444; font-weight:bold">| ERROR    |</span>')
+                                .replace(/\| CRITICAL\s+\|/g, '<span style="color: #b91c1c; font-weight:bold; background: #fee2e2">| CRITICAL |</span>');
+                            
+                            // Highlight keywords in lines
+                            if (colorLine.includes('[FILTERED]')) {
+                                colorLine = colorLine.replace('[FILTERED]', '<span style="color: #9ca3af">[FILTERED]</span>');
+                            }
+                            if (colorLine.includes('TARGET ACQUIRED')) {
+                                colorLine = `<span style="color: #34d399">${colorLine}</span>`;
+                            }
+                            return colorLine;
+                        }).join('');
+
+                        logContainer.innerHTML = formattedLogs;
                         logContainer.scrollTop = logContainer.scrollHeight;
                     }
                 } else {
-                    logContainer.textContent = "No logs available. Start the bot to see output.";
+                    logContainer.innerHTML = "No logs available. Start the bot to see output.";
                 }
 
                 // Update State (Positions)

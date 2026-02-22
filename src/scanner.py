@@ -19,11 +19,18 @@ class MarketScanner:
         """
         logger.info("Scanning for Scalpel V7.0 opportunities...")
         try:
-            # 假设 fetch_active_markets 返回了包含 endDate 的原始数据
             all_markets = await self.fetch_active_markets() 
             eligible = []
             
-            logger.debug(f"Fetched {len(all_markets)} total active markets from API.")
+            stats = {
+                "total": len(all_markets),
+                "filtered_category": 0,
+                "filtered_poison": 0,
+                "filtered_time": 0,
+                "filtered_safety": 0
+            }
+            
+            logger.debug(f"Fetched {stats['total']} total active markets from API.")
             
             for market in all_markets:
                 question = market.get('question', 'Unknown')
@@ -33,16 +40,19 @@ class MarketScanner:
                 excluded_cats = [c.strip().lower() for c in settings.EXCLUDED_CATEGORIES.split(',') if c.strip()]
                 if category.lower() in excluded_cats:
                     logger.debug(f"[FILTERED] Category '{category}' is excluded: {question}")
+                    stats["filtered_category"] += 1
                     continue
 
                 # 1. 黑名单过滤
                 if self._is_poisoned(market):
                     logger.debug(f"[FILTERED] Poison keyword found: {question}")
+                    stats["filtered_poison"] += 1
                     continue
                 
                 # 2. 极短线时间窗口过滤
                 if not self._check_time_window(market):
                     logger.debug(f"[FILTERED] Outside time window: {question}")
+                    stats["filtered_time"] += 1
                     continue
                 
                 # 3. 核心：流动性与动量趋势检查 (Risk Checks)
@@ -51,8 +61,17 @@ class MarketScanner:
                     logger.success(f"🎯 TARGET ACQUIRED: {question} | Category: {category} | Expiring soon!")
                 else:
                     logger.debug(f"[FILTERED] Failed safety locks (Liquidity/Momentum): {question}")
+                    stats["filtered_safety"] += 1
             
-            logger.info(f"Scan complete. Found {len(eligible)} eligible markets.")
+            summary = (
+                f"Scan Complete! Found {len(eligible)} eligible markets.\n"
+                f"  📊 Summary of {stats['total']} markets analyzed:\n"
+                f"  - 🚫 {stats['filtered_category']} rejected by Excluded Categories\n"
+                f"  - ☠️ {stats['filtered_poison']} rejected by Poison Keywords\n"
+                f"  - ⏳ {stats['filtered_time']} rejected by Time Window (< {settings.MIN_HOURS_TO_EXPIRY}h or > {settings.MAX_HOURS_TO_EXPIRY}h)\n"
+                f"  - 🛡️ {stats['filtered_safety']} rejected by Safety Locks (Illiquid or Dropping Momentum)"
+            )
+            logger.info(summary)
             return eligible
         except Exception as e:
             logger.error(f"Scan failed: {e}")
