@@ -29,6 +29,8 @@
         .btn-start:hover { opacity: 0.9; }
         .btn-stop { background-color: var(--danger-color); color: white; box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.2); }
         .btn-stop:hover { opacity: 0.9; }
+        .btn-lang { background-color: #e2e8f0; color: var(--text-main); padding: 8px 16px; border-radius: 20px; font-size: 14px; box-shadow: none; border: 1px solid #cbd5e1; }
+        .btn-lang:hover { background-color: #cbd5e1; }
 
         .layout-grid { display: grid; grid-template-columns: 350px 1fr; gap: 24px; }
         .right-column { display: flex; flex-direction: column; gap: 24px; }
@@ -70,13 +72,14 @@
         <div class="header">
             <div>
                 <h1>PolyMarket Arb Bot</h1>
-                <div style="font-size: 0.9rem; color: var(--text-muted); margin-top: 4px;">Scalpel V7.0 Dashboard</div>
+                <div style="font-size: 0.9rem; color: var(--text-muted); margin-top: 4px;" data-i18n="subtitle">Scalpel V7.0 Dashboard</div>
             </div>
-            <div style="display: flex; align-items: center;">
-                <div id="status-indicator" class="status-badge status-stopped">Checking...</div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <button class="btn-lang" onclick="toggleLanguage()" id="lang-btn">🇺🇸 EN</button>
+                <div id="status-indicator" class="status-badge status-stopped" data-i18n="status_checking">Checking...</div>
                 <div class="controls">
-                    <button class="btn-start" onclick="controlBot('start')">Start Bot</button>
-                    <button class="btn-stop" onclick="controlBot('stop')">Stop Bot</button>
+                    <button class="btn-start" onclick="controlBot('start')" data-i18n="btn_start">Start Bot</button>
+                    <button class="btn-stop" onclick="controlBot('stop')" data-i18n="btn_stop">Stop Bot</button>
                 </div>
             </div>
         </div>
@@ -84,47 +87,47 @@
         <div class="layout-grid">
             <!-- Left Column: Config -->
             <div class="card">
-                <h2>Configuration <button class="btn-save" onclick="saveAllConfig()">Save All</button></h2>
+                <h2><span data-i18n="config_title">Configuration</span> <button class="btn-save" onclick="saveAllConfig()" data-i18n="btn_save">Save All</button></h2>
                 <div id="config-form">
                     <div class="config-group">
                         <label>ORDER_AMOUNT_USD</label>
                         <input type="number" id="cfg-ORDER_AMOUNT_USD" step="1">
-                        <span class="help-text">Size of each bet in USDC (1-5% of bankroll)</span>
+                        <span class="help-text" data-i18n="help_order_amount">Size of each bet in USDC (1-5% of bankroll)</span>
                     </div>
                     <div class="config-group">
                         <label>GLOBAL_MAX_POSITIONS</label>
                         <input type="number" id="cfg-GLOBAL_MAX_POSITIONS" step="1">
-                        <span class="help-text">Max concurrent trades overall</span>
+                        <span class="help-text" data-i18n="help_global_max">Max concurrent trades overall</span>
                     </div>
                     <div class="config-group">
                         <label>MAX_ACTIVE_POSITIONS_PER_CATEGORY</label>
                         <input type="number" id="cfg-MAX_ACTIVE_POSITIONS_PER_CATEGORY" step="1">
-                        <span class="help-text">Max trades per topic</span>
+                        <span class="help-text" data-i18n="help_cat_max">Max trades per topic</span>
                     </div>
                     <div class="config-group">
                         <label>ENTRY_PRICE_MIN</label>
                         <input type="number" id="cfg-ENTRY_PRICE_MIN" step="0.01">
-                        <span class="help-text">Minimum win probability (e.g., 0.94)</span>
+                        <span class="help-text" data-i18n="help_price_min">Minimum win probability (e.g., 0.94)</span>
                     </div>
                     <div class="config-group">
                         <label>MAX_HOURS_TO_EXPIRY</label>
                         <input type="number" id="cfg-MAX_HOURS_TO_EXPIRY" step="0.5">
-                        <span class="help-text">Max hours until market resolves</span>
+                        <span class="help-text" data-i18n="help_max_hours">Max hours until market resolves</span>
                     </div>
                     <div class="config-group">
                         <label>POISON_KEYWORDS</label>
                         <input type="text" id="cfg-POISON_KEYWORDS" oninput="renderTags()">
-                        <span class="help-text">Comma-separated words to avoid</span>
+                        <span class="help-text" data-i18n="help_poison">Comma-separated words to avoid</span>
                     </div>
                     <div class="config-group">
                         <label>EXCLUDED_CATEGORIES</label>
                         <input type="text" id="cfg-EXCLUDED_CATEGORIES" oninput="renderTags()">
-                        <span class="help-text">Comma-separated categories to skip (e.g., Sports,Pop Culture)</span>
+                        <span class="help-text" data-i18n="help_excluded">Comma-separated categories to skip (e.g., Sports,Pop Culture)</span>
                     </div>
                 </div>
 
                 <div style="margin-top: 24px; border-top: 1px solid var(--border-color); padding-top: 20px;">
-                    <h3 style="font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">Active Safety Protection</h3>
+                    <h3 style="font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;" data-i18n="safety_title">Active Safety Protection</h3>
                     <div id="active-keywords-tags" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px;"></div>
                     <div id="active-categories-tags" style="display: flex; flex-wrap: wrap; gap: 6px;"></div>
                 </div>
@@ -134,36 +137,36 @@
             <div class="right-column">
                 <div class="grid-half">
                     <div class="card">
-                        <h2>Active Positions</h2>
+                        <h2 data-i18n="active_positions_title">Active Positions</h2>
                         <div class="table-container">
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>Token ID</th>
-                                        <th>Entry Price</th>
-                                        <th>L2 Timer</th>
+                                        <th data-i18n="th_token_id">Token ID</th>
+                                        <th data-i18n="th_entry_price">Entry Price</th>
+                                        <th data-i18n="th_l2_timer">L2 Timer</th>
                                     </tr>
                                 </thead>
                                 <tbody id="positions-body">
-                                    <tr><td colspan="3" style="text-align: center;">Loading...</td></tr>
+                                    <tr><td colspan="3" style="text-align: center;" data-i18n="loading">Loading...</td></tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
 
                     <div class="card">
-                        <h2>Active Entry Orders</h2>
+                        <h2 data-i18n="active_orders_title">Active Entry Orders</h2>
                         <div class="table-container">
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>Order ID</th>
-                                        <th>Market</th>
-                                        <th>Token ID</th>
+                                        <th data-i18n="th_order_id">Order ID</th>
+                                        <th data-i18n="th_market">Market</th>
+                                        <th data-i18n="th_token_id">Token ID</th>
                                     </tr>
                                 </thead>
                                 <tbody id="orders-body">
-                                    <tr><td colspan="3" style="text-align: center;">Loading...</td></tr>
+                                    <tr><td colspan="3" style="text-align: center;" data-i18n="loading">Loading...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -171,8 +174,8 @@
                 </div>
 
                 <div class="card">
-                    <h2>Live Logs</h2>
-                    <div id="log-container" class="log-container">Loading logs...</div>
+                    <h2 data-i18n="live_logs_title">Live Logs</h2>
+                    <div id="log-container" class="log-container" data-i18n="loading_logs">Loading logs...</div>
                 </div>
             </div>
         </div>
@@ -181,6 +184,99 @@
     <div id="toast" class="toast">Settings Saved! Please restart bot to apply.</div>
 
     <script>
+        const translations = {
+            en: {
+                subtitle: "Scalpel V7.0 Dashboard",
+                btn_start: "Start Bot",
+                btn_stop: "Stop Bot",
+                config_title: "Configuration",
+                btn_save: "Save All",
+                help_order_amount: "Size of each bet in USDC (1-5% of bankroll)",
+                help_global_max: "Max concurrent trades overall",
+                help_cat_max: "Max trades per topic",
+                help_price_min: "Minimum win probability (e.g., 0.94)",
+                help_max_hours: "Max hours until market resolves",
+                help_poison: "Comma-separated words to avoid",
+                help_excluded: "Comma-separated categories to skip (e.g., Sports,Pop Culture)",
+                safety_title: "Active Safety Protection",
+                active_positions_title: "Active Positions",
+                active_orders_title: "Active Entry Orders",
+                th_token_id: "Token ID",
+                th_entry_price: "Entry Price",
+                th_l2_timer: "L2 Timer",
+                th_order_id: "Order ID",
+                th_market: "Market",
+                loading: "Loading...",
+                live_logs_title: "Live Logs",
+                loading_logs: "Loading logs...",
+                no_logs: "No logs available. Start the bot to see output.",
+                no_positions: "No active positions",
+                no_orders: "No active entry orders",
+                toast_saved: "Settings Saved! Restart bot to apply changes.",
+                toast_start: "Bot starting...",
+                toast_stop: "Bot stopping...",
+                status_checking: "Checking...",
+                status_running: "RUNNING",
+                status_stopped: "STOPPED",
+                status_offline: "API OFFLINE"
+            },
+            zh: {
+                subtitle: "手术刀 V7.0 控制面板",
+                btn_start: "启动机器人",
+                btn_stop: "停止机器人",
+                config_title: "策略配置",
+                btn_save: "保存配置",
+                help_order_amount: "单次下注金额 USDC (建议总资金 1-5%)",
+                help_global_max: "全局最大持仓数量",
+                help_cat_max: "同话题最大持仓数 (防止集中风险)",
+                help_price_min: "进场价格底线 (胜率大于该值才买, 比如 0.94)",
+                help_max_hours: "只关注 X 小时内结算的市场",
+                help_poison: "遇到这些关键词绝对不买 (逗号隔开)",
+                help_excluded: "排除这些高危分类 (比如 Sports,Pop Culture)",
+                safety_title: "正在生效的安全防御",
+                active_positions_title: "活跃持仓 (已买入)",
+                active_orders_title: "活动挂单 (等待成交)",
+                th_token_id: "代币 ID",
+                th_entry_price: "成本价",
+                th_l2_timer: "止损倒计时",
+                th_order_id: "订单 ID",
+                th_market: "目标市场",
+                loading: "加载中...",
+                live_logs_title: "系统实时日志",
+                loading_logs: "正在加载日志...",
+                no_logs: "暂无日志。请点击启动按钮以查看输出。",
+                no_positions: "当前无活跃持仓",
+                no_orders: "当前无排队挂单",
+                toast_saved: "配置已保存！请重启机器人以生效。",
+                toast_start: "正在启动机器人...",
+                toast_stop: "正在安全关闭机器人...",
+                status_checking: "检查中...",
+                status_running: "运行中",
+                status_stopped: "已停止",
+                status_offline: "离线"
+            }
+        };
+
+        let currentLang = localStorage.getItem('dashboard_lang') || 'en';
+
+        function applyLanguage() {
+            document.getElementById('lang-btn').textContent = currentLang === 'en' ? '🇺🇸 EN' : '🇨🇳 中文';
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[currentLang][key]) {
+                    el.textContent = translations[currentLang][key];
+                }
+            });
+            // Force status re-render to update text
+            fetchStatus();
+        }
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'en' ? 'zh' : 'en';
+            localStorage.setItem('dashboard_lang', currentLang);
+            applyLanguage();
+        }
+
         const CONFIG_KEYS = [
             "ORDER_AMOUNT_USD", "GLOBAL_MAX_POSITIONS", "MAX_ACTIVE_POSITIONS_PER_CATEGORY",
             "ENTRY_PRICE_MIN", "MAX_HOURS_TO_EXPIRY", "POISON_KEYWORDS", "EXCLUDED_CATEGORIES"
@@ -225,7 +321,7 @@
                         });
                     }
                 }
-                showToast("Configuration Saved! Restart bot to apply changes.");
+                showToast(translations[currentLang].toast_saved);
             } catch (e) {
                 alert("Failed to save configuration.");
             }
@@ -246,10 +342,10 @@
                 // Update Status
                 const statusIndicator = document.getElementById('status-indicator');
                 if (data.status === 'running') {
-                    statusIndicator.textContent = 'RUNNING';
+                    statusIndicator.textContent = translations[currentLang].status_running;
                     statusIndicator.className = 'status-badge status-running';
                 } else {
-                    statusIndicator.textContent = 'STOPPED';
+                    statusIndicator.textContent = translations[currentLang].status_stopped;
                     statusIndicator.className = 'status-badge status-stopped';
                 }
 
@@ -285,7 +381,7 @@
                         logContainer.scrollTop = logContainer.scrollHeight;
                     }
                 } else {
-                    logContainer.innerHTML = "No logs available. Start the bot to see output.";
+                    logContainer.innerHTML = translations[currentLang].no_logs;
                 }
 
                 // Update State (Positions)
@@ -300,7 +396,7 @@
                             </tr>
                         `).join('');
                     } else {
-                        posBody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">No active positions</td></tr>';
+                        posBody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">${translations[currentLang].no_positions}</td></tr>`;
                     }
 
                     const ordBody = document.getElementById('orders-body');
@@ -313,14 +409,15 @@
                             </tr>
                         `).join('');
                     } else {
-                        ordBody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">No active entry orders</td></tr>';
+                        ordBody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">${translations[currentLang].no_orders}</td></tr>`;
                     }
                 }
 
             } catch (error) {
                 console.error("Error fetching status:", error);
-                document.getElementById('status-indicator').textContent = 'API OFFLINE';
-                document.getElementById('status-indicator').className = 'status-badge status-stopped';
+                const statusIndicator = document.getElementById('status-indicator');
+                statusIndicator.textContent = translations[currentLang].status_offline;
+                statusIndicator.className = 'status-badge status-stopped';
             }
         }
 
@@ -328,9 +425,9 @@
             try {
                 await fetch(`/api/bot/${action}`, { method: 'POST' });
                 if(action === 'start') {
-                    showToast("Bot starting...");
+                    showToast(translations[currentLang].toast_start);
                 } else {
-                    showToast("Bot stopping...");
+                    showToast(translations[currentLang].toast_stop);
                 }
                 setTimeout(fetchStatus, 1000); 
             } catch (error) {
@@ -339,6 +436,7 @@
         }
 
         // Initialize
+        applyLanguage();
         fetchConfig();
         fetchStatus();
         setInterval(fetchStatus, 3000); // Poll status
