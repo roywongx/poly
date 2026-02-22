@@ -7,6 +7,8 @@ from fastapi import FastAPI, BackgroundTasks, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from dotenv import dotenv_values, set_key
+from pydantic import BaseModel
 
 app = FastAPI(title="PolyMarket Arb Bot Dashboard")
 
@@ -15,6 +17,33 @@ os.makedirs("src/static", exist_ok=True)
 os.makedirs("src/templates", exist_ok=True)
 app.mount("/static", StaticFiles(directory="src/static"), name="static")
 templates = Jinja2Templates(directory="src/templates")
+
+ALLOWED_CONFIG_KEYS = [
+    "ORDER_AMOUNT_USD", 
+    "GLOBAL_MAX_POSITIONS", 
+    "MAX_ACTIVE_POSITIONS_PER_CATEGORY", 
+    "ENTRY_PRICE_MIN", 
+    "MAX_HOURS_TO_EXPIRY",
+    "STOP_LOSS_L1_TRIGGER",
+    "STOP_LOSS_L2_TRIGGER",
+    "POISON_KEYWORDS"
+]
+
+class ConfigUpdate(BaseModel):
+    key: str
+    value: str
+
+@app.get("/api/config")
+async def get_config():
+    env_vars = dotenv_values(".env")
+    return JSONResponse({k: env_vars.get(k, "") for k in ALLOWED_CONFIG_KEYS})
+
+@app.post("/api/config")
+async def update_config(config: ConfigUpdate):
+    if config.key in ALLOWED_CONFIG_KEYS:
+        set_key(".env", config.key, str(config.value))
+        return {"status": "success"}
+    return {"status": "error", "message": "Invalid key"}, 400
 
 BOT_PROCESS_NAME = "src.main"
 

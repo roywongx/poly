@@ -43,7 +43,8 @@ class MarketScanner:
 
     def _is_poisoned(self, market: Dict) -> bool:
         content = (market.get('question', '') + " " + market.get('description', '')).lower()
-        for kw in settings.POISON_KEYWORDS:
+        keywords = [k.strip().lower() for k in settings.POISON_KEYWORDS.split(',') if k.strip()]
+        for kw in keywords:
             if kw in content:
                 return True
         return False

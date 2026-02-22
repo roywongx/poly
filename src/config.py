@@ -43,11 +43,7 @@ class Settings(BaseSettings):
     CB_MAX_HARD_STOPS: int = 2
     CB_SLEEP_HOURS: int = 24
 
-    POISON_KEYWORDS: List[str] = [
-        'dispute', 'uma', 'opinion', 'oscars', 'twitter', 
-        'tweet', 'x.com', 'announce', 'live', 'next goal', 'minute',
-        'tom hanks', 'ellen degeneres', 'rumor', 'death', 'fake'
-    ]
+    POISON_KEYWORDS: str = "dispute,uma,opinion,oscars,twitter,tweet,x.com,announce,live,next goal,minute,tom hanks,ellen degeneres,rumor,death,fake"
     
     MAX_VOLATILITY_THRESHOLD: float = 0.05
     LIQUIDITY_DEPTH_MULTIPLIER: int = 5
