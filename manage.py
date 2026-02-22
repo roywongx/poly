@@ -25,7 +25,9 @@ def modify_settings():
         "MAX_ACTIVE_POSITIONS_PER_CATEGORY": "单个类别最大持仓数",
         "GLOBAL_MAX_POSITIONS": "全局最大持仓总数",
         "ENTRY_PRICE_MIN": "进场胜率下限 (0.0-1.0)",
-        "MAX_HOURS_TO_EXPIRY": "最大剩余结算时间 (小时)"
+        "MAX_HOURS_TO_EXPIRY": "最大剩余结算时间 (小时)",
+        "POISON_KEYWORDS": "绝对不买的违禁词 (逗号隔开)",
+        "EXCLUDED_CATEGORIES": "排除的高危分类 (逗号隔开)"
     }
 
     while True:
@@ -44,7 +46,7 @@ def modify_settings():
         if choice == 'B':
             break
         elif choice == 'M':
-            key_to_mod = input("请输入要修改的参数键名 (如 ORDER_AMOUNT_USD): ").strip()
+            key_to_mod = input("请输入要修改的参数键名: ").strip()
             if key_to_mod in params:
                 new_val = input(f"请输入 {key_to_mod} 的新值: ").strip()
                 if new_val:
@@ -55,6 +57,15 @@ def modify_settings():
             else:
                 print("❌ 无效的键名")
                 input("\n按回车继续...")
+
+def start_dashboard():
+    print("\n--- 正在启动网页控制面板 (Dashboard) ---")
+    print("👉 启动后请在浏览器访问: http://localhost:8000")
+    print("👉 按 Ctrl+C 停止面板服务并返回菜单\n")
+    try:
+        subprocess.run(["venv\\Scripts\\python.exe", "src/dashboard.py"])
+    except KeyboardInterrupt:
+        pass
 
 def update_program():
     print("\n--- 正在从 GitHub 更新程序 ---")
@@ -109,21 +120,24 @@ def main():
     while True:
         clear_screen()
         print_header()
-        print("1. 🛠️  修改交易指标 (ORDER_AMOUNT, etc.)")
-        print("2. 🔄  更新程序 (Git Pull)")
-        print("3. ⬆️  同步到 GitHub (Git Push)")
-        print("4. 📝  查看/修改说明文档")
+        print("1. 🌐  启动网页控制面板 (Dashboard) - 推荐！")
+        print("2. 🛠️  修改交易指标 (命令行调参)")
+        print("3. 🔄  更新程序 (Git Pull)")
+        print("4. ⬆️  同步到 GitHub (Git Push)")
+        print("5. 📝  查看/修改说明文档")
         print("Q. 退出")
         
         choice = input("\n请选择操作: ").strip().upper()
         
         if choice == '1':
-            modify_settings()
+            start_dashboard()
         elif choice == '2':
-            update_program()
+            modify_settings()
         elif choice == '3':
-            sync_github()
+            update_program()
         elif choice == '4':
+            sync_github()
+        elif choice == '5':
             open_docs()
         elif choice == 'Q':
             sys.exit()
