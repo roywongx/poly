@@ -190,17 +190,30 @@
         td { padding: 14px 12px; border-bottom: 1px dotted var(--border-color); }
         
         .log-container {
-            background: #1c1c1e;
-            color: #d1d1d6;
+            background: #000000;
+            color: #e5e5e5;
             padding: 20px;
             border-radius: 16px;
-            height: 500px;
+            height: 550px;
             overflow-y: auto;
-            font-family: "SF Mono", "SFMono-Regular", ui-monospace, monospace;
-            font-size: 12.5px;
-            line-height: 1.6;
-            box-shadow: inset 0 4px 12px rgba(0,0,0,0.2);
+            font-family: "JetBrains Mono", "SF Mono", "Menlo", monospace;
+            font-size: 12px;
+            line-height: 1.5;
+            box-shadow: inset 0 4px 20px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
         }
+
+        .log-line { margin-bottom: 2px; border-left: 3px solid transparent; padding-left: 10px; }
+        .log-info { color: #818cf8; border-color: #4f46e5; }
+        .log-success { color: #4ade80; border-color: #22c55e; font-weight: 600; background: rgba(34, 197, 94, 0.05); }
+        .log-warn { color: #fbbf24; border-color: #d97706; }
+        .log-error { color: #f87171; border-color: #dc2626; font-weight: 600; background: rgba(220, 38, 38, 0.05); }
+        .log-debug { color: #6b7280; font-size: 11px; }
+        .log-critical { color: #ffffff; background: #991b1b; border-color: #f87171; padding: 4px 10px; border-radius: 4px; }
+
+        .log-summary { color: #38bdf8; background: rgba(56, 189, 248, 0.1); padding: 10px; border-radius: 8px; margin: 10px 0; border: 1px dashed #38bdf8; }
+        .log-target { color: #22c55e; font-weight: bold; text-decoration: underline; }
+        .log-skip { color: #4b5563; }
 
         .toast {
             position: fixed;
@@ -562,17 +575,34 @@
                     if (logContainer.getAttribute('data-raw') !== rawLogs) {
                         logContainer.setAttribute('data-raw', rawLogs);
                         logContainer.innerHTML = data.logs.map(line => {
-                            return line
-                                .replace(/</g, "&lt;").replace(/>/g, "&gt;")
-                                .replace(/\| INFO\s+\|/g, '<span style="color: #0071e3">| INFO |</span>')
-                                .replace(/\| SUCCESS\s+\|/g, '<span style="color: #34c759; font-weight:600">| SUCCESS |</span>')
-                                .replace(/\| WARNING\s+\|/g, '<span style="color: #ff9500">| WARN |</span>')
-                                .replace(/\| ERROR\s+\|/g, '<span style="color: #ff3b30">| ERR |</span>')
-                                .replace(/🎯 TARGET ACQUIRED/g, '<span style="color: #34c759; font-weight:700">🎯 TARGET ACQUIRED</span>')
-                                .replace(/\[FILTERED\]/g, '<span style="color: #8e8e93">[FILTERED]</span>');
+                            let clean = line.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                            let className = "log-line";
+                            
+                            if (clean.includes("| INFO     |")) className += " log-info";
+                            else if (clean.includes("| SUCCESS  |")) className += " log-success";
+                            else if (clean.includes("| WARNING  |")) className += " log-warn";
+                            else if (clean.includes("| ERROR    |")) className += " log-error";
+                            else if (clean.includes("| DEBUG    |")) className += " log-debug";
+                            else if (clean.includes("| CRITICAL |")) className += " log-critical";
+
+                            if (clean.includes("📊 Summary") || clean.includes("Scan Complete")) {
+                                return `<div class="log-summary">${clean}</div>`;
+                            }
+                            
+                            if (clean.includes("🎯 TARGET")) {
+                                clean = clean.replace("🎯 TARGET:", '<span class="log-target">🎯 TARGET:</span>');
+                            }
+
+                            if (clean.includes("SKIP [")) {
+                                clean = `<span class="log-skip">${clean}</span>`;
+                            }
+
+                            return `<div class="${className}">${clean}</div>`;
                         }).join('');
                         logContainer.scrollTop = logContainer.scrollHeight;
                     }
+                } else {
+                    logContainer.innerHTML = `<div style="text-align:center; padding-top:100px; color:var(--apple-gray)">${translations[currentLang].no_logs}</div>`;
                 }
 
                 if (data.state) {
