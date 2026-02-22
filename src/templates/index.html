@@ -90,39 +90,60 @@
                 <h2><span data-i18n="config_title">Configuration</span> <button class="btn-save" onclick="saveAllConfig()" data-i18n="btn_save">Save All</button></h2>
                 <div id="config-form">
                     <div class="config-group">
-                        <label>ORDER_AMOUNT_USD</label>
+                        <label data-i18n="lbl_order_amount">ORDER_AMOUNT_USD</label>
                         <input type="number" id="cfg-ORDER_AMOUNT_USD" step="1">
                         <span class="help-text" data-i18n="help_order_amount">Size of each bet in USDC (1-5% of bankroll)</span>
                     </div>
-                    <div class="config-group">
-                        <label>GLOBAL_MAX_POSITIONS</label>
-                        <input type="number" id="cfg-GLOBAL_MAX_POSITIONS" step="1">
-                        <span class="help-text" data-i18n="help_global_max">Max concurrent trades overall</span>
+                    <div class="grid-half" style="gap:10px;">
+                        <div class="config-group">
+                            <label data-i18n="lbl_global_max">GLOBAL_MAX_POSITIONS</label>
+                            <input type="number" id="cfg-GLOBAL_MAX_POSITIONS" step="1">
+                        </div>
+                        <div class="config-group">
+                            <label data-i18n="lbl_cat_max">MAX_PER_CATEGORY</label>
+                            <input type="number" id="cfg-MAX_ACTIVE_POSITIONS_PER_CATEGORY" step="1">
+                        </div>
+                    </div>
+                    <div class="grid-half" style="gap:10px;">
+                        <div class="config-group">
+                            <label data-i18n="lbl_price_min">ENTRY_PRICE_MIN</label>
+                            <input type="number" id="cfg-ENTRY_PRICE_MIN" step="0.01">
+                        </div>
+                        <div class="config-group">
+                            <label data-i18n="lbl_max_hours">MAX_HOURS</label>
+                            <input type="number" id="cfg-MAX_HOURS_TO_EXPIRY" step="0.5">
+                        </div>
+                    </div>
+                    <div class="grid-half" style="gap:10px;">
+                        <div class="config-group">
+                            <label data-i18n="lbl_sl_l1">STOP_LOSS_L1</label>
+                            <input type="number" id="cfg-STOP_LOSS_L1_TRIGGER" step="0.01">
+                        </div>
+                        <div class="config-group">
+                            <label data-i18n="lbl_sl_l2">STOP_LOSS_L2</label>
+                            <input type="number" id="cfg-STOP_LOSS_L2_TRIGGER" step="0.01">
+                        </div>
                     </div>
                     <div class="config-group">
-                        <label>MAX_ACTIVE_POSITIONS_PER_CATEGORY</label>
-                        <input type="number" id="cfg-MAX_ACTIVE_POSITIONS_PER_CATEGORY" step="1">
-                        <span class="help-text" data-i18n="help_cat_max">Max trades per topic</span>
-                    </div>
-                    <div class="config-group">
-                        <label>ENTRY_PRICE_MIN</label>
-                        <input type="number" id="cfg-ENTRY_PRICE_MIN" step="0.01">
-                        <span class="help-text" data-i18n="help_price_min">Minimum win probability (e.g., 0.94)</span>
-                    </div>
-                    <div class="config-group">
-                        <label>MAX_HOURS_TO_EXPIRY</label>
-                        <input type="number" id="cfg-MAX_HOURS_TO_EXPIRY" step="0.5">
-                        <span class="help-text" data-i18n="help_max_hours">Max hours until market resolves</span>
-                    </div>
-                    <div class="config-group">
-                        <label>POISON_KEYWORDS</label>
+                        <label data-i18n="lbl_poison">POISON_KEYWORDS</label>
                         <input type="text" id="cfg-POISON_KEYWORDS" oninput="renderTags()">
                         <span class="help-text" data-i18n="help_poison">Comma-separated words to avoid</span>
                     </div>
                     <div class="config-group">
-                        <label>EXCLUDED_CATEGORIES</label>
+                        <label data-i18n="lbl_excluded">EXCLUDED_CATEGORIES</label>
                         <input type="text" id="cfg-EXCLUDED_CATEGORIES" oninput="renderTags()">
-                        <span class="help-text" data-i18n="help_excluded">Comma-separated categories to skip (e.g., Sports,Pop Culture)</span>
+                        <span class="help-text" data-i18n="help_excluded">Comma-separated categories to skip</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; background: #fffbeb; padding: 15px; border-radius: 8px; border: 1px solid #fef3c7;">
+                    <h3 style="font-size: 0.85rem; color: #92400e; text-transform: uppercase; margin-top:0; margin-bottom: 10px;" data-i18n="vetted_title">💡 Recommended Safety Presets</h3>
+                    <div style="font-size: 0.8rem; line-height: 1.4; color: #b45309; margin-bottom: 10px;" data-i18n="vetted_desc">Based on our research, these categories are highly dangerous:</div>
+                    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                        <button class="badge-tag tag-category" onclick="addExcluded('Sports')" style="cursor:pointer; border:1px solid #bae6fd;">Sports</button>
+                        <button class="badge-tag tag-category" onclick="addExcluded('Pop Culture')" style="cursor:pointer; border:1px solid #bae6fd;">Pop Culture</button>
+                        <button class="badge-tag tag-category" onclick="addExcluded('Entertainment')" style="cursor:pointer; border:1px solid #bae6fd;">Entertainment</button>
+                        <button class="badge-tag tag-category" onclick="addExcluded('Politics')" style="cursor:pointer; border:1px solid #bae6fd;">Politics</button>
                     </div>
                 </div>
 
@@ -191,13 +212,20 @@
                 btn_stop: "Stop Bot",
                 config_title: "Configuration",
                 btn_save: "Save All",
+                lbl_order_amount: "ORDER_AMOUNT_USD",
+                lbl_global_max: "GLOBAL_MAX",
+                lbl_cat_max: "MAX_PER_CAT",
+                lbl_price_min: "ENTRY_MIN",
+                lbl_max_hours: "MAX_HOURS",
+                lbl_sl_l1: "STOP_LOSS_L1",
+                lbl_sl_l2: "STOP_LOSS_L2",
+                lbl_poison: "POISON_KEYWORDS",
+                lbl_excluded: "EXCLUDED_CATEGORIES",
                 help_order_amount: "Size of each bet in USDC (1-5% of bankroll)",
-                help_global_max: "Max concurrent trades overall",
-                help_cat_max: "Max trades per topic",
-                help_price_min: "Minimum win probability (e.g., 0.94)",
-                help_max_hours: "Max hours until market resolves",
                 help_poison: "Comma-separated words to avoid",
-                help_excluded: "Comma-separated categories to skip (e.g., Sports,Pop Culture)",
+                help_excluded: "Comma-separated categories to skip",
+                vetted_title: "💡 Recommended Safety Presets",
+                vetted_desc: "Based on our research, these categories are highly dangerous:",
                 safety_title: "Active Safety Protection",
                 active_positions_title: "Active Positions",
                 active_orders_title: "Active Entry Orders",
@@ -226,13 +254,20 @@
                 btn_stop: "停止机器人",
                 config_title: "策略配置",
                 btn_save: "保存配置",
-                help_order_amount: "单次下注金额 USDC (建议总资金 1-5%)",
-                help_global_max: "全局最大持仓数量",
-                help_cat_max: "同话题最大持仓数 (防止集中风险)",
-                help_price_min: "进场价格底线 (胜率大于该值才买, 比如 0.94)",
-                help_max_hours: "只关注 X 小时内结算的市场",
+                lbl_order_amount: "单笔下注 (USDC)",
+                lbl_global_max: "全局最大仓位",
+                lbl_cat_max: "同话题上限",
+                lbl_price_min: "进场价格底线",
+                lbl_max_hours: "最大剩余时间",
+                lbl_sl_l1: "预警线 (L1)",
+                lbl_sl_l2: "硬止损 (L2)",
+                lbl_poison: "绝对不买关键词",
+                lbl_excluded: "排除的高危分类",
+                help_order_amount: "单次下注金额 (建议总资金 1-5%)",
                 help_poison: "遇到这些关键词绝对不买 (逗号隔开)",
-                help_excluded: "排除这些高危分类 (比如 Sports,Pop Culture)",
+                help_excluded: "排除这些高危分类 (逗号隔开)",
+                vetted_title: "💡 推荐的安全预设",
+                vetted_desc: "根据之前的多轮分析，这些分类属于高风险区域：",
                 safety_title: "正在生效的安全防御",
                 active_positions_title: "活跃持仓 (已买入)",
                 active_orders_title: "活动挂单 (等待成交)",
@@ -267,7 +302,6 @@
                     el.textContent = translations[currentLang][key];
                 }
             });
-            // Force status re-render to update text
             fetchStatus();
         }
 
@@ -279,7 +313,8 @@
 
         const CONFIG_KEYS = [
             "ORDER_AMOUNT_USD", "GLOBAL_MAX_POSITIONS", "MAX_ACTIVE_POSITIONS_PER_CATEGORY",
-            "ENTRY_PRICE_MIN", "MAX_HOURS_TO_EXPIRY", "POISON_KEYWORDS", "EXCLUDED_CATEGORIES"
+            "ENTRY_PRICE_MIN", "MAX_HOURS_TO_EXPIRY", "STOP_LOSS_L1_TRIGGER", "STOP_LOSS_L2_TRIGGER",
+            "POISON_KEYWORDS", "EXCLUDED_CATEGORIES"
         ];
 
         async function fetchConfig() {
@@ -299,14 +334,28 @@
         }
 
         function renderTags() {
-            const kwInput = document.getElementById('cfg-POISON_KEYWORDS').value;
-            const catInput = document.getElementById('cfg-EXCLUDED_CATEGORIES').value;
+            const kwEl = document.getElementById('cfg-POISON_KEYWORDS');
+            const catEl = document.getElementById('cfg-EXCLUDED_CATEGORIES');
+            if(!kwEl || !catEl) return;
+
+            const kwInput = kwEl.value || "";
+            const catInput = catEl.value || "";
             
             const kwContainer = document.getElementById('active-keywords-tags');
             const catContainer = document.getElementById('active-categories-tags');
             
             kwContainer.innerHTML = kwInput.split(',').filter(t => t.trim()).map(t => `<span class="badge-tag tag-keyword">${t.trim()}</span>`).join('');
             catContainer.innerHTML = catInput.split(',').filter(t => t.trim()).map(t => `<span class="badge-tag tag-category">${t.trim()}</span>`).join('');
+        }
+
+        function addExcluded(cat) {
+            const el = document.getElementById('cfg-EXCLUDED_CATEGORIES');
+            const current = el.value.split(',').map(t => t.trim()).filter(t => t);
+            if (!current.includes(cat)) {
+                current.push(cat);
+                el.value = current.join(',');
+                renderTags();
+            }
         }
 
         async function saveAllConfig() {
@@ -339,7 +388,6 @@
                 const response = await fetch('/api/status');
                 const data = await response.json();
                 
-                // Update Status
                 const statusIndicator = document.getElementById('status-indicator');
                 if (data.status === 'running') {
                     statusIndicator.textContent = translations[currentLang].status_running;
@@ -349,17 +397,15 @@
                     statusIndicator.className = 'status-badge status-stopped';
                 }
 
-                // Update Logs
                 const logContainer = document.getElementById('log-container');
                 if (data.logs && data.logs.length > 0) {
                     const rawLogs = data.logs.join('');
                     if (logContainer.getAttribute('data-raw') !== rawLogs) {
                         logContainer.setAttribute('data-raw', rawLogs);
                         
-                        // Parse colors
                         const formattedLogs = data.logs.map(line => {
                             let colorLine = line
-                                .replace(/</g, "&lt;").replace(/>/g, "&gt;") // escape HTML
+                                .replace(/</g, "&lt;").replace(/>/g, "&gt;") 
                                 .replace(/\| INFO\s+\|/g, '<span style="color: #60a5fa">| INFO     |</span>')
                                 .replace(/\| DEBUG\s+\|/g, '<span style="color: #9ca3af">| DEBUG    |</span>')
                                 .replace(/\| SUCCESS\s+\|/g, '<span style="color: #34d399; font-weight:bold">| SUCCESS  |</span>')
@@ -367,11 +413,10 @@
                                 .replace(/\| ERROR\s+\|/g, '<span style="color: #ef4444; font-weight:bold">| ERROR    |</span>')
                                 .replace(/\| CRITICAL\s+\|/g, '<span style="color: #b91c1c; font-weight:bold; background: #fee2e2">| CRITICAL |</span>');
                             
-                            // Highlight keywords in lines
                             if (colorLine.includes('[FILTERED]')) {
                                 colorLine = colorLine.replace('[FILTERED]', '<span style="color: #9ca3af">[FILTERED]</span>');
                             }
-                            if (colorLine.includes('TARGET ACQUIRED')) {
+                            if (colorLine.includes('🎯 TARGET ACQUIRED')) {
                                 colorLine = `<span style="color: #34d399">${colorLine}</span>`;
                             }
                             return colorLine;
@@ -384,7 +429,6 @@
                     logContainer.innerHTML = translations[currentLang].no_logs;
                 }
 
-                // Update State (Positions)
                 if (data.state) {
                     const posBody = document.getElementById('positions-body');
                     if (data.state.active_positions && Object.keys(data.state.active_positions).length > 0) {
@@ -438,8 +482,7 @@
         // Initialize
         applyLanguage();
         fetchConfig();
-        fetchStatus();
-        setInterval(fetchStatus, 3000); // Poll status
+        setInterval(fetchStatus, 3000); 
     </script>
 </body>
 </html>
