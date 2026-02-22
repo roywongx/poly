@@ -511,12 +511,16 @@
                     }
                 });
                 renderTags();
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error(">>> [UI] Error fetching config:", e); }
         }
 
         function renderTags() {
-            const kwInput = document.getElementById('cfg-POISON_KEYWORDS').value;
-            const catInput = document.getElementById('cfg-EXCLUDED_CATEGORIES').value;
+            const kwEl = document.getElementById('cfg-POISON_KEYWORDS');
+            const catEl = document.getElementById('cfg-EXCLUDED_CATEGORIES');
+            if(!kwEl || !catEl) return;
+
+            const kwInput = kwEl.value || "";
+            const catInput = catEl.value || "";
             
             document.getElementById('active-keywords-tags').innerHTML = kwInput.split(',').filter(t => t.trim()).map(t => `<span class="badge-tag tag-keyword">${t.trim()}</span>`).join('');
             document.getElementById('active-categories-tags').innerHTML = catInput.split(',').filter(t => t.trim()).map(t => `<span class="badge-tag tag-category">${t.trim()}</span>`).join('');
@@ -524,6 +528,7 @@
 
         function addValue(id, val) {
             const el = document.getElementById(`cfg-${id}`);
+            if(!el) return;
             const current = el.value.split(',').map(t => t.trim()).filter(t => t);
             if (!current.includes(val)) {
                 current.push(val);
@@ -545,7 +550,10 @@
                     }
                 }
                 showToast(translations[currentLang].toast_saved);
-            } catch (e) { alert("Error saving."); }
+            } catch (e) { 
+                console.error(">>> [UI] Error saving config:", e);
+                alert("Error saving."); 
+            }
         }
 
         function showToast(msg) {
@@ -575,6 +583,7 @@
                     if (logContainer.getAttribute('data-raw') !== rawLogs) {
                         logContainer.setAttribute('data-raw', rawLogs);
                         logContainer.innerHTML = data.logs.map(line => {
+                            if(!line) return "";
                             let clean = line.replace(/</g, "&lt;").replace(/>/g, "&gt;");
                             let className = "log-line";
                             
@@ -588,21 +597,19 @@
                             if (clean.includes("📊 Summary") || clean.includes("Scan Complete")) {
                                 return `<div class="log-summary">${clean}</div>`;
                             }
-                            
                             if (clean.includes("🎯 TARGET")) {
                                 clean = clean.replace("🎯 TARGET:", '<span class="log-target">🎯 TARGET:</span>');
                             }
-
                             if (clean.includes("SKIP [")) {
                                 clean = `<span class="log-skip">${clean}</span>`;
                             }
-
                             return `<div class="${className}">${clean}</div>`;
                         }).join('');
                         logContainer.scrollTop = logContainer.scrollHeight;
                     }
                 } else {
                     logContainer.innerHTML = `<div style="text-align:center; padding-top:100px; color:var(--apple-gray)">${translations[currentLang].no_logs}</div>`;
+                    logContainer.setAttribute('data-raw', '');
                 }
 
                 if (data.state) {
@@ -616,7 +623,7 @@
                             </tr>
                         `).join('');
                     } else {
-                        posBody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--apple-gray); padding: 20px;">${translations[currentLang].no_positions}</td></tr>`;
+                        posBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--apple-gray); padding:20px;">${translations[currentLang].no_positions}</td></tr>`;
                     }
 
                     const ordBody = document.getElementById('orders-body');
@@ -628,11 +635,26 @@
                             </tr>
                         `).join('');
                     } else {
-                        ordBody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: var(--apple-gray); padding: 20px;">${translations[currentLang].no_orders}</td></tr>`;
+                        ordBody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:var(--apple-gray); padding:20px;">${translations[currentLang].no_orders}</td></tr>`;
                     }
                 }
             } catch (error) {
+                console.error(">>> [UI] Status fetch failed:", error);
                 document.getElementById('status-indicator').textContent = translations[currentLang].status_offline;
+            }
+        }
+
+        async function controlBot(action) {
+            console.log(`>>> [UI] ${action.toUpperCase()} requested`);
+            try {
+                const response = await fetch(`/api/bot/${action}`, { method: 'POST' });
+                const result = await response.json();
+                console.log(`>>> [UI] ${action.toUpperCase()} API response:`, result);
+                showToast(action === 'start' ? translations[currentLang].toast_start : translations[currentLang].toast_stop);
+                setTimeout(fetchStatus, 1500); 
+            } catch (error) {
+                console.error(`>>> [UI] Control API failed:`, error);
+                alert(`Failed to ${action} bot. Check console.`);
             }
         }
 
