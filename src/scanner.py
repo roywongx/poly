@@ -89,10 +89,12 @@ class MarketScanner:
         """
         流动性锁 + 动量趋势过滤 (Momentum Filter)
         """
-        token_id = market.get('condition_id') 
+        token_id = market.get('token_id')
+        if not token_id: return False
+        
         try:
             # A. 流动性深度检查
-            ob = await self.client.get_order_book(token_id)
+            ob = await asyncio.get_event_loop().run_in_executor(None, self.client.get_order_book, token_id)
             if not ob.bids: return False
             
             # 只需要前两档买单
@@ -108,23 +110,13 @@ class MarketScanner:
                 return False
 
             # B. 动量趋势过滤 (Momentum Filter) - 拒绝接飞刀
-            # 获取过去 2 小时的历史K线 (假设 interval="5m")
-            # 注意：需确认 API 是否支持 history，若不支持可用 snapshot 估算
-            history = await self.client.get_price_history(token_id, interval="5m") 
-            
-            # 只需要最近 2 小时的数据点 (24个点)
-            recent_high = 0.0
-            cutoff_time = datetime.now(timezone.utc) - timedelta(hours=settings.MOMENTUM_LOOKBACK_HOURS)
-            
-            # 简单的最高价提取逻辑
-            recent_candles = [p for p in history if datetime.fromtimestamp(p['timestamp'], timezone.utc) > cutoff_time]
-            if recent_candles:
-                recent_high = max(float(p['max_price']) for p in recent_candles)
-            
-            # 核心判断：若过去2小时最高价 > 现价 + 0.02 -> 视为下跌趋势，拒绝
-            if recent_high > (best_bid + settings.MAX_PRICE_DROP_TOLERANCE):
-                logger.warning(f"Momentum Rejected: {token_id} (High: {recent_high} > Bid: {best_bid})")
-                return False
+            # 采用 Gamma API 中的 oneDayPriceChange 字段作为动量指标
+            price_change = market.get('oneDayPriceChange')
+            if price_change is not None:
+                # 核心判断：若过去24小时跌幅超过容忍度 -> 视为下跌趋势，拒绝
+                if float(price_change) < -settings.MAX_PRICE_DROP_TOLERANCE:
+                    logger.warning(f"Momentum Rejected: {token_id} (Price drop: {price_change} < -{settings.MAX_PRICE_DROP_TOLERANCE})")
+                    return False
                 
             return True
         except Exception as e:
@@ -132,5 +124,41 @@ class MarketScanner:
             return False
 
     async def fetch_active_markets(self) -> List[Dict]:
-        # Placeholder for actual API call
-        return []
+        import requests
+        try:
+            url = "https://gamma-api.polymarket.com/events?active=true&closed=false&limit=100"
+            loop = asyncio.get_event_loop()
+            resp = await loop.run_in_executor(None, requests.get, url)
+            
+            if resp.status_code != 200:
+                logger.error(f"Gamma API returned {resp.status_code}: {resp.text}")
+                return []
+                
+            events = resp.json()
+            markets = []
+            for event in events:
+                for m in event.get('markets', []):
+                    # Flatten necessary fields
+                    m['category'] = event.get('category', 'Unknown')
+                    m['end_date_iso'] = m.get('endDateIso', m.get('endDate'))
+                    m['condition_id'] = m.get('conditionId')
+                    m['oneDayPriceChange'] = m.get('oneDayPriceChange', 0)
+                    
+                    # Extract YES token ID
+                    clob_ids = m.get('clobTokenIds')
+                    if clob_ids:
+                        import json
+                        try:
+                            parsed_ids = json.loads(clob_ids)
+                            if isinstance(parsed_ids, list) and len(parsed_ids) > 0:
+                                m['token_id'] = parsed_ids[0]
+                        except: pass
+                    
+                    if m.get('token_id'):
+                        m['time_class'] = "A"
+                        markets.append(m)
+                        
+            return markets
+        except Exception as e:
+            logger.error(f"Failed to fetch from Gamma API: {e}")
+            return []
