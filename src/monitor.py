@@ -20,7 +20,7 @@ class RiskMonitor:
 
     async def watch_portfolio(self):
         """
-        全天候 24h 风控监控
+        全天候 24h 风控监控 (采用高频轮询替代不稳定的 Websocket)
         """
         self.is_running = True
         while self.is_running:
@@ -30,14 +30,58 @@ class RiskMonitor:
                     await asyncio.sleep(60)
                     continue
 
-                async with self.client.connect_websocket() as ws:
-                    await self._subscribe(ws)
-                    async for message in ws:
-                        data = json.loads(message)
-                        await self._handle_message(data)
+                await self._poll_orders()
+                await self._poll_active_positions()
+
             except Exception as e:
-                logger.error(f"WS Reconnecting: {e}")
-                await asyncio.sleep(5)
+                logger.error(f"Monitor Polling Error: {e}")
+            
+            await asyncio.sleep(2)  # 每 2 秒轮询一次
+
+    async def _poll_orders(self):
+        active_orders = list(self.execution.active_entry_orders.keys())
+        for order_id in active_orders:
+            if order_id in self.execution.tp_placed_orders:
+                continue
+            
+            try:
+                # py_clob_client 0.34.6 中的 get_order 是同步方法
+                order_info = self.client.get_order(order_id)
+                status = order_info.get("status") if isinstance(order_info, dict) else getattr(order_info, "status", None)
+                
+                if status in ["MATCHED", "FILLED"]:
+                    token_id = self.execution.active_entry_orders[order_id]["token_id"]
+                    size = getattr(order_info, "original_size", getattr(order_info, "size", 0)) if not isinstance(order_info, dict) else order_info.get("original_size", order_info.get("size", 0))
+                    price = getattr(order_info, "price", 0) if not isinstance(order_info, dict) else order_info.get("price", 0)
+                    
+                    fill_data = {
+                        "order_id": order_id,
+                        "size": float(size) if size else 0.0,
+                        "price": float(price) if price else 0.0,
+                        "token_id": token_id
+                    }
+                    await self.execution.handle_order_fill(fill_data)
+                    self._add_to_monitoring(fill_data)
+            except Exception as e:
+                pass # 忽略网络偶发报错，避免日志轰炸
+            
+            await asyncio.sleep(0.1)  # 避免触发 API 限流
+
+    async def _poll_active_positions(self):
+        active_tokens = list(self.active_positions.keys())
+        for token_id in active_tokens:
+            try:
+                ob = self.client.get_order_book(token_id)
+                if ob and hasattr(ob, "bids") and ob.bids:
+                    book_data = {
+                        "token_id": token_id,
+                        "bids": [[ob.bids[0].price, getattr(ob.bids[0], "size", 0)]]
+                    }
+                    await self._check_stop_loss(book_data)
+            except Exception as e:
+                pass
+            
+            await asyncio.sleep(0.1)
 
     async def _check_circuit_breaker(self) -> bool:
         """
@@ -56,18 +100,14 @@ class RiskMonitor:
             return True
         return False
 
-    async def _handle_message(self, data: Dict):
-        event_type = data.get("event_type")
-        if event_type == "ORDER_UPDATE":
-            payload = data.get("payload", {})
-            if payload.get("status") == "FILLED":
-                # 核心功能：秒级止盈 (Scalpel Mode)
-                await self.execution.handle_order_fill(payload)
-                self._add_to_monitoring(payload)
-
-        elif event_type == "BOOK_UPDATE":
-            # 核心功能：严苛止损 (Strict Stop-Loss)
-            await self._check_stop_loss(data.get("payload"))
+    async def _cancel_tp_orders(self, token_id: str):
+        for order_id in list(self.execution.tp_placed_orders):
+            try:
+                # py_clob_client uses cancel()
+                self.client.cancel(order_id)
+                self.execution.tp_placed_orders.remove(order_id)
+            except Exception as e:
+                logger.warning(f"Error cancelling TP order: {e}")
 
     def _add_to_monitoring(self, payload: Dict):
         token_id = payload.get("token_id")

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PolyMarket Arb Bot Dashboard</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f4f7f6; color: #333; }
+        .container { max-width: 1200px; margin: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 2px solid #ddd; }
+        .status-badge { padding: 8px 16px; border-radius: 20px; font-weight: bold; text-transform: uppercase; }
+        .status-running { background-color: #d4edda; color: #155724; }
+        .status-stopped { background-color: #f8d7da; color: #721c24; }
+        .controls button { padding: 10px 20px; font-size: 16px; cursor: pointer; border: none; border-radius: 5px; margin-left: 10px; }
+        .btn-start { background-color: #28a745; color: white; }
+        .btn-stop { background-color: #dc3545; color: white; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .card h2 { margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .log-container { background: #1e1e1e; color: #00ff00; padding: 10px; border-radius: 5px; height: 300px; overflow-y: auto; font-family: monospace; white-space: pre-wrap; font-size: 12px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f8f9fa; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>PolyMarket Arb Bot Dashboard</h1>
+            <div style="display: flex; align-items: center;">
+                <div id="status-indicator" class="status-badge status-stopped">Checking...</div>
+                <div class="controls">
+                    <button class="btn-start" onclick="controlBot('start')">Start Bot</button>
+                    <button class="btn-stop" onclick="controlBot('stop')">Stop Bot</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h2>Active Positions</h2>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Token ID</th>
+                                <th>Entry Price</th>
+                                <th>L2 Trigger Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="positions-body">
+                            <tr><td colspan="3">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Active Entry Orders</h2>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Market</th>
+                                <th>Token ID</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orders-body">
+                            <tr><td colspan="3">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+            <h2>System Logs</h2>
+            <div id="log-container" class="log-container">Loading logs...</div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+                
+                // Update Status
+                const statusIndicator = document.getElementById('status-indicator');
+                if (data.status === 'running') {
+                    statusIndicator.textContent = 'RUNNING';
+                    statusIndicator.className = 'status-badge status-running';
+                } else {
+                    statusIndicator.textContent = 'STOPPED';
+                    statusIndicator.className = 'status-badge status-stopped';
+                }
+
+                // Update Logs
+                const logContainer = document.getElementById('log-container');
+                if (data.logs && data.logs.length > 0) {
+                    logContainer.textContent = data.logs.join('');
+                    logContainer.scrollTop = logContainer.scrollHeight;
+                } else {
+                    logContainer.textContent = "No logs available.";
+                }
+
+                // Update State (Positions)
+                if (data.state) {
+                    const posBody = document.getElementById('positions-body');
+                    if (data.state.active_positions && Object.keys(data.state.active_positions).length > 0) {
+                        posBody.innerHTML = Object.entries(data.state.active_positions).map(([tokenId, pos]) => `
+                            <tr>
+                                <td title="${tokenId}">${tokenId.substring(0, 8)}...</td>
+                                <td>${pos.entry_price}</td>
+                                <td>${pos.l2_trigger_time ? new Date(pos.l2_trigger_time * 1000).toLocaleTimeString() : 'N/A'}</td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        posBody.innerHTML = '<tr><td colspan="3" style="text-align: center;">No active positions</td></tr>';
+                    }
+
+                    const ordBody = document.getElementById('orders-body');
+                    if (data.state.active_entry_orders && Object.keys(data.state.active_entry_orders).length > 0) {
+                        ordBody.innerHTML = Object.entries(data.state.active_entry_orders).map(([orderId, ord]) => `
+                            <tr>
+                                <td title="${orderId}">${orderId.substring(0, 8)}...</td>
+                                <td title="${ord.market_name}">${(ord.market_name || '').substring(0, 30)}...</td>
+                                <td title="${ord.token_id}">${ord.token_id.substring(0, 8)}...</td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        ordBody.innerHTML = '<tr><td colspan="3" style="text-align: center;">No active entry orders</td></tr>';
+                    }
+                }
+
+            } catch (error) {
+                console.error("Error fetching status:", error);
+                document.getElementById('status-indicator').textContent = 'ERROR';
+                document.getElementById('status-indicator').className = 'status-badge status-stopped';
+            }
+        }
+
+        async function controlBot(action) {
+            try {
+                await fetch(`/api/bot/${action}`, { method: 'POST' });
+                setTimeout(fetchStatus, 1000); // Wait a second for status to change
+            } catch (error) {
+                console.error(`Error trying to ${action} bot:`, error);
+                alert(`Failed to ${action} bot. Check console.`);
+            }
+        }
+
+        // Poll every 3 seconds
+        setInterval(fetchStatus, 3000);
+        fetchStatus();
+    </script>
+</body>
+</html>

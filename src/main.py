@@ -17,6 +17,9 @@ class PolyArbBot:
         # 自动创建日志目录
         if not os.path.exists("logs"):
             os.makedirs("logs")
+        
+        # 记录日志到文件以便 Dashboard 读取
+        logger.add("logs/bot_{time}.log", rotation="10 MB", retention="7 days")
             
         host = "https://clob.polymarket.com"
         
@@ -46,7 +49,8 @@ class PolyArbBot:
         logger.success("PolyMarket Arb Bot Started")
         tasks = [
             asyncio.create_task(self.scanner_loop()),
-            asyncio.create_task(self.monitor.watch_portfolio())
+            asyncio.create_task(self.monitor.watch_portfolio()),
+            asyncio.create_task(self.state_dumper_loop())
         ]
         try:
             await asyncio.gather(*tasks)
@@ -54,6 +58,22 @@ class PolyArbBot:
             pass
         finally:
             await self.shutdown()
+
+    async def state_dumper_loop(self):
+        import json
+        while self.is_running:
+            try:
+                state = {
+                    "active_entry_orders": self.execution.active_entry_orders,
+                    "tp_placed_orders": list(self.execution.tp_placed_orders),
+                    "active_positions": self.monitor.active_positions,
+                    "category_counts": self.category_counts
+                }
+                with open("bot_state.json", "w", encoding="utf-8") as f:
+                    json.dump(state, f, ensure_ascii=False, indent=2)
+            except Exception as e:
+                pass
+            await asyncio.sleep(5)
 
     async def scanner_loop(self):
         while self.is_running:

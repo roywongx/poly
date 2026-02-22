@@ -4,6 +4,19 @@
 
 ---
 
+## 🌐 Web Dashboard / 网页控制面板 (New)
+
+We have added a modern Web UI to monitor and control your bot in real-time.
+我们增加了一个现代化的网页控制面板，用于实时监控和控制您的机器人。
+
+**How to start the dashboard / 如何启动面板:**
+```powershell
+python src/dashboard.py
+```
+Then open your browser and go to / 然后打开浏览器访问: `http://localhost:8000`
+
+---
+
 ## 🛠️ 管理控制台 / Management Console (New in V7.0)
 
 We have introduced a beginner-friendly management script: `manage.py`.
