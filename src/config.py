@@ -10,9 +10,9 @@ class Settings(BaseSettings):
     POLYGON_RPC_URL: str = "https://polygon-rpc.com"      # RPC 节点地址
 
     # === 核心交易参数 (Roy 的手术刀) ===
-    ORDER_AMOUNT_USD: float = 50.0                         # 单次下注金额 (单位: USDC)
-    MAX_ACTIVE_POSITIONS_PER_CATEGORY: int = 5             # 同一类别的最大持仓数 (如：政治类最多买5单)
-    GLOBAL_MAX_POSITIONS: int = 10                         # 全局最大持仓总数 (同时最多运行多少单)
+    ORDER_AMOUNT_USD: float = 50.0                         # 单次下注金额 (单位: USDC)。建议设置为总资金的 1%-5%。
+    MAX_ACTIVE_POSITIONS_PER_CATEGORY: int = 5             # 同一类别的最大持仓数 (例如：政治话题最多同时买5单)，防止风险过度集中。
+    GLOBAL_MAX_POSITIONS: int = 10                         # 全局最大持仓总数 (整个机器人同时运行的最大交易总单数)。
 
     # === V7.0 策略过滤参数 ===
     MIN_HOURS_TO_EXPIRY: float = 1.0                       # 最小剩余时间 (小时)，低于此时间不进场
@@ -30,6 +30,8 @@ class Settings(BaseSettings):
     CLOB_API_KEY: Optional[str] = None
     CLOB_API_SECRET: Optional[str] = None
     CLOB_PASSPHRASE: Optional[str] = None
+    FUNDER_ADDRESS: Optional[str] = None
+    SIGNATURE_TYPE: Optional[str] = "0"
 
     # 严苛止损参数
     STOP_LOSS_L1_TRIGGER: float = 0.91 # 撤销止盈
@@ -57,7 +59,7 @@ class Settings(BaseSettings):
         service_id = "polymarket_bot"
         
         # 尝试从 Keyring 加载敏感信息
-        keys = ["EOA_PRIVATE_KEY", "CLOB_API_KEY", "CLOB_API_SECRET", "CLOB_PASSPHRASE"]
+        keys = ["EOA_PRIVATE_KEY", "CLOB_API_KEY", "CLOB_API_SECRET", "CLOB_PASSPHRASE", "FUNDER_ADDRESS", "SIGNATURE_TYPE"]
         for key in keys:
             # 如果当前值为空（未在环境变量中设置），则从 keyring 获取
             if not getattr(self, key):

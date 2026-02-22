@@ -9,6 +9,11 @@
 We have introduced a beginner-friendly management script: `manage.py`.
 You can use it to visually modify parameters, update the bot, and sync with GitHub safely.
 
+⚠️ **Important:** Before running `manage.py` or the bot for the very first time, you MUST run the onboarding script to generate your `.env` configuration file:
+```powershell
+python scripts/onboard_user.py
+```
+
 **How to start the console:**
 ```powershell
 python manage.py
@@ -20,6 +25,11 @@ python manage.py
 
 ### 中文 (Chinese)
 所有的核心参数都可以在根目录的 `.env` 文件中修改。强烈建议您使用上方的 `python manage.py` 命令进入**可视化管理控制台**进行修改，无需触碰代码。
+
+⚠️ **注意：** 在首次运行 `manage.py` 或启动机器人之前，您**必须**先运行一次初始化向导来生成 `.env` 配置文件：
+```powershell
+python scripts/onboard_user.py
+```
 
 | 参数名称 | 白话文说明 | 建议设置 |
 | :--- | :--- | :--- |

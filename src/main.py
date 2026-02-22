@@ -31,7 +31,9 @@ class PolyArbBot:
             host=host,
             key=settings.EOA_PRIVATE_KEY,
             chain_id=settings.CHAIN_ID,
-            creds=creds
+            creds=creds,
+            signature_type=int(settings.SIGNATURE_TYPE) if settings.SIGNATURE_TYPE else 0,
+            funder=settings.FUNDER_ADDRESS if settings.FUNDER_ADDRESS else None
         )
         self.execution = ExecutionEngine(self.clob_client)
         self.scanner = MarketScanner(self.clob_client)
