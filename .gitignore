@@ -14,3 +14,5 @@ logs/
 .DS_Store
 Thumbs.db
 USER_GUIDE_PRIVATE.md
+AI_PROMPT_PRIVATE.md
+bot_state.json
