@@ -58,6 +58,11 @@
         .btn-save:hover { background-color: #1d4ed8; }
         
         .toast { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 12px 24px; border-radius: 8px; display: none; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); z-index: 1000;}
+
+        /* Tag Styles */
+        .badge-tag { font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+        .tag-keyword { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+        .tag-category { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
     </style>
 </head>
 <body>
@@ -108,14 +113,20 @@
                     </div>
                     <div class="config-group">
                         <label>POISON_KEYWORDS</label>
-                        <input type="text" id="cfg-POISON_KEYWORDS">
+                        <input type="text" id="cfg-POISON_KEYWORDS" oninput="renderTags()">
                         <span class="help-text">Comma-separated words to avoid</span>
                     </div>
                     <div class="config-group">
                         <label>EXCLUDED_CATEGORIES</label>
-                        <input type="text" id="cfg-EXCLUDED_CATEGORIES">
+                        <input type="text" id="cfg-EXCLUDED_CATEGORIES" oninput="renderTags()">
                         <span class="help-text">Comma-separated categories to skip (e.g., Sports,Pop Culture)</span>
                     </div>
+                </div>
+
+                <div style="margin-top: 24px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                    <h3 style="font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">Active Safety Protection</h3>
+                    <div id="active-keywords-tags" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px;"></div>
+                    <div id="active-categories-tags" style="display: flex; flex-wrap: wrap; gap: 6px;"></div>
                 </div>
             </div>
 
@@ -185,9 +196,21 @@
                         el.value = data[key];
                     }
                 });
+                renderTags();
             } catch (e) {
                 console.error("Failed to load config", e);
             }
+        }
+
+        function renderTags() {
+            const kwInput = document.getElementById('cfg-POISON_KEYWORDS').value;
+            const catInput = document.getElementById('cfg-EXCLUDED_CATEGORIES').value;
+            
+            const kwContainer = document.getElementById('active-keywords-tags');
+            const catContainer = document.getElementById('active-categories-tags');
+            
+            kwContainer.innerHTML = kwInput.split(',').filter(t => t.trim()).map(t => `<span class="badge-tag tag-keyword">${t.trim()}</span>`).join('');
+            catContainer.innerHTML = catInput.split(',').filter(t => t.trim()).map(t => `<span class="badge-tag tag-category">${t.trim()}</span>`).join('');
         }
 
         async function saveAllConfig() {

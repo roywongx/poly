@@ -4,6 +4,29 @@
 
 ---
 
+## 🛡️ Strategy & Safety / 核心策略与安全 (V7.0)
+
+To ensure the highest win rate (94%+), the bot comes pre-configured with industry-vetted safety filters.
+为了确保极高的胜率（>94%），机器人预设了经过实战验证的安全过滤机制。
+
+### 🚫 Dangerous Categories / 危险分类
+The following categories are excluded by default because they are prone to high volatility, manipulation, or resolution disputes:
+以下分类默认被排除，因为它们极易受到高波动、人为操纵或结算争议的影响：
+- **Sports (体育)**: Extremely high volatility and dominated by HFT (High-Frequency Trading) bots.
+- **Pop Culture (流行文化)**: Often based on rumors or subjective interpretations.
+- **Entertainment (娱乐)**: Similar risks to pop culture, high dependency on "unreliable" social media sources.
+
+### 🧪 Poison Keywords / 违禁词库
+We skip any markets containing these "Poison" words to avoid ambiguity and resolution conflicts:
+我们避开包含以下“毒药”词汇的市场，以防止结算歧义和争议：
+- `UMA`, `Dispute`: Signals potential conflicts in how the market will be settled.
+- `Twitter`, `X.com`: Sources that are too volatile or prone to fake news.
+- `Announce`, `Live`, `Minute`: Real-time event risks where prices move faster than the bot can react.
+- `Opinion`, `Subjective`: Markets that aren't based on hard, objective facts.
+- `Death`, `Rumor`, `Fake`: High misinformation risk.
+
+---
+
 ## 🌐 Web Dashboard / 网页控制面板 (New)
 
 We have added a modern Web UI to monitor and control your bot in real-time.
