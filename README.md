@@ -4,87 +4,24 @@
 
 ---
 
-## 🛡️ Strategy & Safety / 核心策略与安全 (V7.0)
+## 🌐 1-Click Web Dashboard / 零代码网页控制面板 (NEW in V7.0)
 
-To ensure the highest win rate (94%+), the bot comes pre-configured with industry-vetted safety filters.
-为了确保极高的胜率（>94%），机器人预设了经过实战验证的安全过滤机制。
+Forget about editing code or configuration files. V7.0 introduces a modern, bilingual Web Dashboard that allows you to control everything from your browser.
+忘掉枯燥的代码和配置文件吧。V7.0 引入了现代化的中英双语网页控制面板，一切操作都在浏览器中可视化完成。
 
-### 🚫 Dangerous Categories / 危险分类
-The following categories are excluded by default because they are prone to high volatility, manipulation, or resolution disputes:
-以下分类默认被排除，因为它们极易受到高波动、人为操纵或结算争议的影响：
-- **Sports (体育)**: Extremely high volatility and dominated by HFT (High-Frequency Trading) bots.
-- **Pop Culture (流行文化)**: Often based on rumors or subjective interpretations.
-- **Entertainment (娱乐)**: Similar risks to pop culture, high dependency on "unreliable" social media sources.
+**How to start / 如何启动:**
+1. Open your terminal / 打开命令行终端.
+2. Run the dashboard script / 运行面板服务:
+   ```powershell
+   python src/dashboard.py
+   ```
+3. Open your browser and go to / 打开浏览器访问: **`http://localhost:8000`**
 
-### 🧪 Poison Keywords / 违禁词库
-We skip any markets containing these "Poison" words to avoid ambiguity and resolution conflicts:
-我们避开包含以下“毒药”词汇的市场，以防止结算歧义和争议：
-- `UMA`, `Dispute`: Signals potential conflicts in how the market will be settled.
-- `Twitter`, `X.com`: Sources that are too volatile or prone to fake news.
-- `Announce`, `Live`, `Minute`: Real-time event risks where prices move faster than the bot can react.
-- `Opinion`, `Subjective`: Markets that aren't based on hard, objective facts.
-- `Death`, `Rumor`, `Fake`: High misinformation risk.
-
----
-
-## 🌐 Web Dashboard / 网页控制面板 (New)
-
-We have added a modern Web UI to monitor and control your bot in real-time.
-我们增加了一个现代化的网页控制面板，用于实时监控和控制您的机器人。
-
-**How to start the dashboard / 如何启动面板:**
-```powershell
-python src/dashboard.py
-```
-Then open your browser and go to / 然后打开浏览器访问: `http://localhost:8000`
-
----
-
-## 🛠️ 管理控制台 / Management Console (New in V7.0)
-
-We have introduced a beginner-friendly management script: `manage.py`.
-You can use it to visually modify parameters, update the bot, and sync with GitHub safely.
-
-⚠️ **Important:** Before running `manage.py` or the bot for the very first time, you MUST run the onboarding script to generate your `.env` configuration file:
-```powershell
-python scripts/onboard_user.py
-```
-
-**How to start the console:**
-```powershell
-python manage.py
-```
-
----
-
-## ⚙️ 参数配置 / Configuration
-
-### 中文 (Chinese)
-所有的核心参数都可以在根目录的 `.env` 文件中修改。强烈建议您使用上方的 `python manage.py` 命令进入**可视化管理控制台**进行修改，无需触碰代码。
-
-⚠️ **注意：** 在首次运行 `manage.py` 或启动机器人之前，您**必须**先运行一次初始化向导来生成 `.env` 配置文件：
-```powershell
-python scripts/onboard_user.py
-```
-
-| 参数名称 | 白话文说明 | 建议设置 |
-| :--- | :--- | :--- |
-| **`ORDER_AMOUNT_USD`** | **单笔投资额**：机器人看准一个机会后，每次投入购买的 USDC (美元稳定币) 数量。 | 建议为您总资金的 **1% 到 5%**。例如总资金 $1000，可设为 $20-$50。 |
-| **`GLOBAL_MAX_POSITIONS`** | **全盘最大持仓数**：机器人最多同时进行多少笔交易。达到这个数字后，机器人将暂停寻找新机会，直到现有订单结算。 | 建议设为 **10 到 20**。这决定了您最多占用多少总资金。 |
-| **`MAX_ACTIVE_POSITIONS_PER_CATEGORY`** | **单话题最大持仓数**：为了防止资金过度集中在一个事件（如：大选、特定体育赛事）上翻车。 | 建议设为 **5**。这意味着对于同一个话题，机器人最多只会下 5 单。 |
-| **`ENTRY_PRICE_MIN`** | **进场胜率底线**：在 Polymarket，价格即代表市场认为的胜率。0.94 代表只有当市场认为某事有 >94% 的概率发生时，我们才买入。 | 建议保持 **0.94**。V7.0 主打“稳赢”极高胜率策略。 |
-| **`MAX_HOURS_TO_EXPIRY`** | **最长等待时间**：只扫描距离揭晓结果还有 X 小时内的市场。 | 建议保持 **12.0**。时间越短，确定性越高，资金周转越快。 |
-
-### English
-All core parameters can be safely modified using the interactive console: `python manage.py`. This is highly recommended over manually editing the `.env` file.
-
-| Parameter | Beginner-Friendly Description | Recommended |
-| :--- | :--- | :--- |
-| **`ORDER_AMOUNT_USD`** | **Order Size**: The exact amount of USDC the bot will spend each time it finds a highly probable winning trade. | **1% - 5%** of your total bankroll. (e.g., $20-$50 for a $1000 account). |
-| **`GLOBAL_MAX_POSITIONS`** | **Max Concurrent Trades**: The absolute maximum number of active bets the bot will hold at any one time across all topics. | **10 - 20**. Once reached, the bot stops buying until a trade resolves. |
-| **`MAX_ACTIVE_POSITIONS_PER_CATEGORY`** | **Category Limit**: Prevents the bot from placing all your funds on variations of the same event (e.g., all bets on politics). | **5**. This means a maximum of 5 concurrent bets on a single topic. |
-| **`ENTRY_PRICE_MIN`** | **Minimum Win Probability**: In Polymarket, price = probability. 0.94 means we only bet if the market believes there's a >94% chance of winning. | **0.94**. V7.0 focuses exclusively on extreme high-probability "sure things." |
-| **`MAX_HOURS_TO_EXPIRY`** | **Max Wait Time**: Only scan and bet on markets that will resolve and pay out within this many hours. | **12.0**. Shorter timeframes mean faster capital turnover and higher certainty. |
+### Features / 面板功能:
+- **1-Click Start/Stop (一键启停)**: Safely start or shut down the bot.
+- **Visual Configuration (可视化调参)**: Change bet size, risk limits, and safety filters on the fly.
+- **Live Monitoring (实时监控)**: Watch active positions, open orders, and a color-coded live log stream.
+- **Bilingual (中英双语)**: Click the "EN / 中文" button at the top right to switch languages.
 
 ---
 
@@ -92,18 +29,29 @@ All core parameters can be safely modified using the interactive console: `pytho
 
 ## English
 
+### 🛡️ Strategy & Safety Filters
+To ensure the highest win rate (94%+), the bot comes pre-configured with industry-vetted safety filters.
+
+#### 🚫 Dangerous Categories
+The following categories are excluded by default because they are prone to high volatility, manipulation, or resolution disputes:
+- **Sports**: Extremely high volatility and dominated by HFT (High-Frequency Trading) bots.
+- **Pop Culture / Entertainment**: Often based on rumors or subjective interpretations, high dependency on "unreliable" social media sources.
+
+#### 🧪 Poison Keywords
+We skip any markets containing these "Poison" words to avoid ambiguity and resolution conflicts:
+- `UMA`, `Dispute`: Signals potential conflicts in how the market will be settled.
+- `Twitter`, `X.com`: Sources that are too volatile or prone to fake news.
+- `Announce`, `Live`, `Minute`: Real-time event risks where prices move faster than the bot can react.
+- `Opinion`, `Subjective`: Markets that aren't based on hard, objective facts.
+- `Death`, `Rumor`, `Fake`: High misinformation risk.
+
 ### 🧠 Design Philosophy: The "Scalpel" Approach
 PolyMarket Scalpel is a high-frequency-ready (HFT) short-term arbitrage bot. 
-- **Precision**: Targets extreme high-probability (0.94-0.99) outcomes in their final 1-12 hours.
+- **Precision**: Targets extreme high-probability (0.94-0.99) outcomes in their final 1-15 hours.
 - **Resilience**: Uses momentum filters to avoid "falling knives" and 5x liquidity checks to prevent HFT front-running and slippage.
 - **Security First**: Private keys are heavily encrypted and stored in your operating system's hardware-backed keyring (AES-256). They never exist in plain text in the codebase.
 
-### 🛡️ Feature Set
-1.  **Bank-Grade Security**: OS System Keyring (Scheme B) encryption for wallets.
-2.  **Ironclad Strategy**: 0.94+ "Sure Thing" logic demanding deep order book liquidity.
-3.  **Risk Management Engine**: Includes L2 Hard Stops (panic sells if price crashes below 0.85) and a Global Circuit Breaker (halts trading for 24h if multiple stops are hit).
-
-### 🚀 Detailed Installation
+### 🚀 Advanced Installation (CLI)
 
 #### **Windows**
 1. **Prepare Environment**:
@@ -131,29 +79,35 @@ PolyMarket Scalpel is a high-frequency-ready (HFT) short-term arbitrage bot.
    python3 scripts/onboard_user.py
    ```
 
-### ⚙️ Usage
-- **Start Bot**: `python -m src.main`
-- **Manage Settings**: `python manage.py` (Interactive console)
-- **Stop Bot**: Press `Ctrl + C` (Performs a graceful shutdown, canceling open orders).
-
 ---
 
 <a name="中文"></a>
 
 ## 中文
 
+### 🛡️ 核心策略与安全过滤
+为了确保极高的胜率（>94%），机器人预设了经过实战验证的安全过滤机制。这些机制可以在网页控制面板中随时修改。
+
+#### 🚫 危险分类 (Excluded Categories)
+以下分类默认被排除，因为它们极易受到高波动、人为操纵或结算争议的影响：
+- **Sports (体育)**: 极高的波动性，且充斥着专门用来“割韭菜”的高频交易机器人。
+- **Pop Culture (流行文化) / 娱乐**: 结果往往基于主观判断或谣言，信源极不可靠。
+
+#### 🧪 违禁词库 (Poison Keywords)
+我们避开包含以下“毒药”词汇的市场，以防止结算歧义和争议：
+- `UMA`, `Dispute`: 强烈暗示该市场在结算时可能会引发争议和仲裁。
+- `Twitter`, `X.com`: 假消息泛滥，价格极易被单条推文操控。
+- `Announce`, `Live`, `Minute`: 实时直播类事件，价格变化太快，普通机器人会被高频套利者抢跑。
+- `Opinion`, `Subjective`: 主观意见类市场，缺乏客观结算标准。
+- `Death`, `Rumor`, `Fake`: 虚假信息风险极高。
+
 ### 🧠 设计思想：“手术刀”原则
 PolyMarket Scalpel 是一款专为极短线套利、追求极高胜率设计的机器人。
-- **极致精准**：仅锁定距离揭晓结果前 1-12 小时、市场公认胜率极高（价格 0.94-0.99）的机会。
+- **极致精准**：仅锁定距离揭晓结果前 1-15 小时、市场公认胜率极高（价格 0.94-0.99）的机会。
 - **抗高频猎杀**：内置动量过滤拒绝“接飞刀”，并强制要求订单簿深度至少为下注额的 5 倍，防止滑点和高频机器人割韭菜。
 - **军事级安全**：您的私钥被加密存储于 Windows/macOS 操作系统内核级的保险箱中，永不会以明文形式出现在代码或磁盘里。
 
-### 🛡️ 功能特性
-1.  **安全架构**：彻底摒弃 `.env` 明文存私钥，采用 System Keyring 硬件加密方案。
-2.  **核心策略**：0.94+ 稳赢逻辑，资金安全第一，收益第二。
-3.  **智能风控系统**：L2 级硬止损（若事件突发黑天鹅跌破 0.85 持续 15s 则强制割肉）及全局熔断机制（连续止损两次则罢工 24 小时保护本金）。
-
-### 🚀 详细安装指南
+### 🚀 命令行安装指南 (开发者)
 
 #### **Windows 系统**
 1. **环境准备**：
@@ -181,10 +135,22 @@ PolyMarket Scalpel 是一款专为极短线套利、追求极高胜率设计的�
    python3 scripts/onboard_user.py
    ```
 
-### ⚙️ 运行说明
-- **启动机器人**：`python -m src.main`
-- **打开管理控制台 (调参/更新)**：`python manage.py`
-- **安全停止机器人**：在运行窗口按下 `Ctrl + C`（程序将自动撤销所有未成交的挂单并安全退出）。
+---
+
+## 🤖 AI Context & Prompt (For AI Reviewers/Backtesting)
+
+*If you are an LLM or an AI agent analyzing this repository, please consider the following architecture context:*
+
+**System Architecture:**
+1. **Scanner (`src/scanner.py`)**: Responsible for fetching active markets from the Polymarket Gamma API. It employs severe server-side pagination and date filtering (`end_date_min`/`end_date_max`) converted strictly to UTC. It filters markets based on localized JSON tags, `POISON_KEYWORDS`, and `EXCLUDED_CATEGORIES`. Momentum checks are performed via the API's `oneDayPriceChange` metric.
+2. **Execution (`src/execution.py`)**: Uses the new `py_clob_client` (v0.34.6+) for Maker order placement at precise `0.94-0.96` boundaries. TP (Take Profit) orders are handled asynchronously once matched.
+3. **Monitor (`src/monitor.py`)**: Avoids fragile WebSocket connections. It relies on a high-frequency (every 2s) REST polling loop. Implements Strict Stop-Loss at `0.85` (15s L2 Timer) and a Global Circuit Breaker (Halts if 2 stops triggered in 12h).
+4. **Dashboard (`src/dashboard.py`)**: A FastAPI + Jinja2 UI that uses `psutil` to manage the bot as a background daemon. Reads logs directly from disk for live rendering.
+
+**Key constraints for further modifications:**
+- Never revert the REST polling back to WebSockets unless `py_clob_client` implements unified robust connection pooling.
+- Retain the OS keyring structure for `EOA_PRIVATE_KEY`; never expose secrets in plain text.
+- Do not remove the momentum protection logic; high-probability markets dropping >2% in a day are extremely toxic on Polymarket.
 
 ---
 
