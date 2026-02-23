@@ -25,6 +25,39 @@ Forget about editing code or configuration files. V8.0 introduces a modern, bili
 
 ---
 
+## 🚀 Installation & Setup / 部署与启动
+
+You only need to install the bot once. After that, you can control everything from the web dashboard.
+您只需要部署一次，之后所有的操作都可以在网页控制面板中完成。
+
+### **Windows**
+1. **Prepare Environment / 环境准备**:
+   ```powershell
+   cd PolyMarket-Arb-Bot-V6
+   python -m venv venv
+   .\venv\Scripts\Activate.ps1
+   pip install -r requirements.txt
+   ```
+2. **Onboarding (Wallet Setup) / 绑定钱包**:
+   ```powershell
+   python scripts/onboard_user.py
+   ```
+
+### **Linux / macOS**
+1. **Prepare Environment / 环境准备**:
+   ```bash
+   cd PolyMarket-Arb-Bot-V6
+   python3 -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
+   ```
+2. **Onboarding (Wallet Setup) / 绑定钱包**:
+   ```bash
+   python3 scripts/onboard_user.py
+   ```
+
+---
+
 <a name="english"></a>
 
 ## English
@@ -48,34 +81,6 @@ V8.0 transitions from a single monolithic bot to a multi-bot architecture:
 - **Trend-V1**: A momentum follower. Enters at >70% if the market shows strong positive momentum.
 - **Arb-V1**: The aggressive short-term arbitrage bot. Enters at >60% but demands massive 10x liquidity to ensure quick exits.
 - **Learning Infrastructure**: Backed by `learning.py` and `db.py`, laying the foundation for Bayesian adaptive learning to automatically tweak these thresholds in V9.0.
-
-### 🚀 Advanced Installation (CLI)
-
-#### **Windows**
-1. **Prepare Environment**:
-   ```powershell
-   cd PolyMarket-Arb-Bot-V6
-   python -m venv venv
-   .\venv\Scripts\Activate.ps1
-   pip install -r requirements.txt
-   ```
-2. **Onboarding (Wallet Setup)**:
-   ```powershell
-   python scripts/onboard_user.py
-   ```
-
-#### **Linux / macOS**
-1. **Prepare Environment**:
-   ```bash
-   cd PolyMarket-Arb-Bot-V6
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
-   ```
-2. **Onboarding (Wallet Setup)**:
-   ```bash
-   python3 scripts/onboard_user.py
-   ```
 
 ---
 
@@ -102,30 +107,6 @@ V8.0 彻底重构了底层，从单一机器人进化为“多策略并行竞争
 - **Trend-V1 (趋势客)**: 门槛降至 70%，但要求标的有极强的上升动能。
 - **Arb-V1 (套利者)**: 门槛降至 60%，激进打法，但要求 10 倍的超高深度护航。
 - **成长型基因**: 引入了 SQLite 本地数据库和贝叶斯特征提取 (`learning.py`)，它会默默记录每一次输赢的特征，为未来的参数自动进化做准备。
-
-### 🚀 命令行安装指南 (开发者)
-
-#### **Windows 系统**
-1. **环境准备**：
-   ```powershell
-   cd PolyMarket-Arb-Bot-V6
-   python -m venv venv
-   .\venv\Scripts\Activate.ps1
-   pip install -r requirements.txt
-   ```
-2. **凭证配置 (导入钱包)**：
-   ```powershell
-   python scripts/onboard_user.py
-   ```
-
-#### **Linux / macOS 系统**
-1. **环境准备**：
-   ```bash
-   cd PolyMarket-Arb-Bot-V6
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
-   ```
 
 ---
 
