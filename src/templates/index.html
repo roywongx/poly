@@ -694,24 +694,37 @@
                     
                     let paramsHtml = '';
 
+                    const paramMeta = {
+                        "min_price": { label: "Min Entry Price (Win Rate)", desc: "Lowest probability to enter (e.g., 0.93 = 93%).", step: 0.01 },
+                        "max_price": { label: "Max Entry Price", desc: "Highest probability to enter. Usually 0.99.", step: 0.01 },
+                        "depth_multiplier": { label: "Liquidity Multiplier", desc: "Required OrderBook depth vs Bet Size. Higher = safer.", step: 1 },
+                        "max_drop": { label: "Max 24h Drop", desc: "Momentum filter. 0.02 means reject if price dropped > 2%.", step: 0.01 },
+                        "min_momentum": { label: "Min 24h Momentum", desc: "Trend filter. 0.05 means require at least +5% growth.", step: 0.01 }
+                    };
+
                     botsBody.innerHTML = botData.bots.map((b, idx) => {
                         let rankClass = idx < 3 ? `bot-rank-${idx+1}` : '';
                         
+                        let parsedParams = typeof b.params === 'string' ? JSON.parse(b.params) : (b.params || {});
+                        
                         // Generate params HTML for this bot
-                        let inputsHtml = Object.entries(b.params || {}).map(([key, val]) => `
-                            <div style="flex: 1; min-width: 100px;">
-                                <label style="font-size:0.75rem; color:var(--apple-gray); display:block; margin-bottom:4px;">${key}</label>
-                                <input type="number" step="0.01" name="${key}" data-bot="${b.name}" value="${val}" style="padding:6px; font-size:0.85rem;">
+                        let inputsHtml = Object.entries(parsedParams).map(([key, val]) => {
+                            let meta = paramMeta[key] || { label: key, desc: "", step: 0.01 };
+                            return `
+                            <div style="flex: 1; min-width: 140px; margin-bottom: 8px;">
+                                <label style="font-size:0.8rem; font-weight:600; color:var(--apple-blue); display:block; margin-bottom:2px;">${meta.label}</label>
+                                <div style="font-size:0.7rem; color:var(--apple-gray); margin-bottom:6px; line-height:1.2; height: 28px; overflow: hidden;">${meta.desc}</div>
+                                <input type="number" step="${meta.step}" name="${key}" data-bot="${b.name}" value="${val}" style="padding:8px; font-size:0.9rem; width:100%;">
                             </div>
-                        `).join('');
+                        `}).join('');
 
                         paramsHtml += `
-                            <div style="border: 1px solid var(--border-color); padding: 12px; border-radius: 12px; background: white;">
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
-                                    <strong style="font-size:0.9rem;">${b.name}</strong>
-                                    <button class="btn btn-ghost" style="padding:4px 12px; font-size:0.8rem; background:rgba(0,113,227,0.1); color:var(--apple-blue);" onclick="saveBotConfig('${b.name}')">Save</button>
+                            <div style="border: 1px solid var(--border-color); padding: 15px; border-radius: 12px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                                    <strong style="font-size:1rem; color:var(--text-main);">${b.name}</strong>
+                                    <button class="btn btn-ghost" style="padding:6px 16px; font-size:0.85rem; background:var(--apple-blue); color:white;" onclick="saveBotConfig('${b.name}')">Save Configuration</button>
                                 </div>
-                                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                                <div style="display:flex; gap:15px; flex-wrap:wrap;">
                                     ${inputsHtml}
                                 </div>
                             </div>
