@@ -238,6 +238,15 @@
         .trade-loss { color: var(--apple-red); font-weight: bold; }
         .trade-pending { color: var(--apple-blue); }
 
+        /* Toggle Switch CSS */
+        .switch input:checked + .slider { background-color: var(--apple-green); }
+        .switch input:focus + .slider { box-shadow: 0 0 1px var(--apple-green); }
+        .switch input:checked + .slider:before { transform: translateX(20px); }
+        .slider:before {
+            position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+            background-color: white; transition: .4s; border-radius: 50%;
+        }
+
         @media (max-width: 1000px) {
             .layout-grid { grid-template-columns: 1fr; }
         }
@@ -254,6 +263,13 @@
                 <button class="btn btn-ghost" onclick="toggleLanguage()" id="lang-btn">🇺🇸 EN</button>
                 <div id="status-indicator" class="status-badge status-stopped" data-i18n="status_checking">Checking...</div>
                 <div class="controls" style="display: flex; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-right: 10px;">
+                        <label class="switch" style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                            <input type="checkbox" id="cfg-PAPER_MODE" onchange="togglePaperMode()" style="opacity: 0; width: 0; height: 0;">
+                            <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px;"></span>
+                        </label>
+                        <span style="font-size: 0.85rem; font-weight: 600;" data-i18n="lbl_paper_mode">Paper Mode</span>
+                    </div>
                     <button class="btn btn-success" onclick="controlBot('start')">
                         <span data-i18n="btn_start">Start Arena</span>
                     </button>
@@ -489,7 +505,7 @@
 
         const CONFIG_KEYS = [
             "ORDER_AMOUNT_USD", "GLOBAL_MAX_POSITIONS",
-            "MAX_HOURS_TO_EXPIRY", "POISON_KEYWORDS", "EXCLUDED_CATEGORIES"
+            "MAX_HOURS_TO_EXPIRY", "POISON_KEYWORDS", "EXCLUDED_CATEGORIES", "PAPER_MODE"
         ];
 
         async function fetchConfig() {
@@ -499,11 +515,25 @@
                 CONFIG_KEYS.forEach(key => {
                     const el = document.getElementById(`cfg-${key}`);
                     if(el && data[key] !== undefined) {
-                        el.value = data[key];
+                        if (el.type === 'checkbox') {
+                            el.checked = data[key] === 'True' || data[key] === 'true' || data[key] === true;
+                        } else {
+                            el.value = data[key];
+                        }
                     }
                 });
                 renderTags();
             } catch (e) { console.error(">>> [UI] Error fetching config:", e); }
+        }
+
+        async function togglePaperMode() {
+            const isChecked = document.getElementById('cfg-PAPER_MODE').checked;
+            await fetch('/api/config', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({key: 'PAPER_MODE', value: isChecked ? 'True' : 'False'})
+            });
+            showToast(translations[currentLang].toast_saved);
         }
 
         function renderTags() {
