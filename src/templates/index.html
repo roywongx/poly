@@ -59,6 +59,7 @@
 
         .status-running { background-color: rgba(52, 199, 89, 0.15); color: var(--apple-green); border: 1px solid rgba(52, 199, 89, 0.2); }
         .status-stopped { background-color: rgba(255, 59, 48, 0.1); color: var(--apple-red); border: 1px solid rgba(255, 59, 48, 0.2); }
+        .status-paper { background-color: rgba(0, 113, 227, 0.15); color: var(--apple-blue); border: 1px solid rgba(0, 113, 227, 0.2); }
 
         .btn {
             padding: 10px 22px;
@@ -88,7 +89,7 @@
         /* Grid Layout */
         .layout-grid {
             display: grid;
-            grid-template-columns: 400px 1fr;
+            grid-template-columns: 380px 1fr;
             gap: 30px;
         }
 
@@ -189,12 +190,16 @@
         th { text-align: left; padding: 12px; color: var(--apple-gray); font-weight: 500; border-bottom: 1px solid var(--border-color); }
         td { padding: 14px 12px; border-bottom: 1px dotted var(--border-color); }
         
+        .bot-rank-1 { border-left: 3px solid #fbbf24; background: rgba(251, 191, 36, 0.05); }
+        .bot-rank-2 { border-left: 3px solid #9ca3af; }
+        .bot-rank-3 { border-left: 3px solid #b45309; }
+
         .log-container {
             background: #000000;
             color: #e5e5e5;
             padding: 20px;
             border-radius: 16px;
-            height: 550px;
+            height: 400px;
             overflow-y: auto;
             font-family: "JetBrains Mono", "SF Mono", "Menlo", monospace;
             font-size: 12px;
@@ -209,11 +214,6 @@
         .log-warn { color: #fbbf24; border-color: #d97706; }
         .log-error { color: #f87171; border-color: #dc2626; font-weight: 600; background: rgba(220, 38, 38, 0.05); }
         .log-debug { color: #6b7280; font-size: 11px; }
-        .log-critical { color: #ffffff; background: #991b1b; border-color: #f87171; padding: 4px 10px; border-radius: 4px; }
-
-        .log-summary { color: #38bdf8; background: rgba(56, 189, 248, 0.1); padding: 10px; border-radius: 8px; margin: 10px 0; border: 1px dashed #38bdf8; }
-        .log-target { color: #22c55e; font-weight: bold; text-decoration: underline; }
-        .log-skip { color: #4b5563; }
 
         .toast {
             position: fixed;
@@ -234,6 +234,10 @@
         .grid-half { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .right-column { display: flex; flex-direction: column; gap: 30px; }
 
+        .trade-win { color: var(--apple-green); font-weight: bold; }
+        .trade-loss { color: var(--apple-red); font-weight: bold; }
+        .trade-pending { color: var(--apple-blue); }
+
         @media (max-width: 1000px) {
             .layout-grid { grid-template-columns: 1fr; }
         }
@@ -243,18 +247,18 @@
     <div class="container">
         <div class="header">
             <div>
-                <h1 data-i18n="title">PolyMarket Arb Bot</h1>
-                <div style="font-size: 0.95rem; color: var(--text-muted); margin-top: 6px; font-weight: 500;" data-i18n="subtitle">Scalpel V7.0 Dashboard</div>
+                <h1 data-i18n="title">PolyMarket Arena</h1>
+                <div style="font-size: 0.95rem; color: var(--text-muted); margin-top: 6px; font-weight: 500;" data-i18n="subtitle">Multi-Bot Adaptive Strategy Engine V8.0</div>
             </div>
             <div style="display: flex; align-items: center; gap: 15px;">
                 <button class="btn btn-ghost" onclick="toggleLanguage()" id="lang-btn">🇺🇸 EN</button>
                 <div id="status-indicator" class="status-badge status-stopped" data-i18n="status_checking">Checking...</div>
                 <div class="controls" style="display: flex; gap: 10px;">
                     <button class="btn btn-success" onclick="controlBot('start')">
-                        <span data-i18n="btn_start">Start Bot</span>
+                        <span data-i18n="btn_start">Start Arena</span>
                     </button>
                     <button class="btn btn-danger" onclick="controlBot('stop')">
-                        <span data-i18n="btn_stop">Stop Bot</span>
+                        <span data-i18n="btn_stop">Stop Arena</span>
                     </button>
                 </div>
             </div>
@@ -264,7 +268,7 @@
             <!-- Left Column: Config -->
             <div class="card">
                 <h2>
-                    <span data-i18n="config_title">Configuration</span>
+                    <span data-i18n="config_title">Risk Parameters</span>
                     <button class="btn btn-primary" onclick="saveAllConfig()" style="padding: 6px 16px; font-size: 13px;">
                         <span data-i18n="btn_save">Save All</span>
                     </button>
@@ -274,28 +278,17 @@
                     <div class="config-group">
                         <label data-i18n="lbl_order_amount">ORDER_AMOUNT_USD</label>
                         <input type="number" id="cfg-ORDER_AMOUNT_USD" step="1">
-                        <span class="help-text" data-i18n="help_order_amount">Size of each bet in USDC (1-5% of bankroll)</span>
+                        <span class="help-text" data-i18n="help_order_amount">Base size of each bet in USDC</span>
                     </div>
 
                     <div class="grid-half">
+                        <div class="config-group">
+                            <label data-i18n="lbl_max_hours">MAX HOURS TO EXP</label>
+                            <input type="number" id="cfg-MAX_HOURS_TO_EXPIRY" step="0.5">
+                        </div>
                         <div class="config-group">
                             <label data-i18n="lbl_global_max">GLOBAL MAX</label>
                             <input type="number" id="cfg-GLOBAL_MAX_POSITIONS">
-                        </div>
-                        <div class="config-group">
-                            <label data-i18n="lbl_cat_max">PER CATEGORY</label>
-                            <input type="number" id="cfg-MAX_ACTIVE_POSITIONS_PER_CATEGORY">
-                        </div>
-                    </div>
-
-                    <div class="grid-half">
-                        <div class="config-group">
-                            <label data-i18n="lbl_price_min">ENTRY MIN</label>
-                            <input type="number" id="cfg-ENTRY_PRICE_MIN" step="0.01">
-                        </div>
-                        <div class="config-group">
-                            <label data-i18n="lbl_max_hours">MAX HOURS</label>
-                            <input type="number" id="cfg-MAX_HOURS_TO_EXPIRY" step="0.5">
                         </div>
                     </div>
 
@@ -348,42 +341,45 @@
 
             <!-- Right Column: Monitoring -->
             <div class="right-column">
+                
                 <div class="card" style="padding: 20px;">
-                    <div class="grid-half" style="gap: 30px;">
-                        <div>
-                            <h2 style="font-size: 1.1rem;" data-i18n="active_positions_title">Active Positions</h2>
-                            <div class="table-container">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th data-i18n="th_token_id">Token</th>
-                                            <th data-i18n="th_entry_price">Entry</th>
-                                            <th data-i18n="th_l2_timer">L2 Timer</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="positions-body"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                        <div>
-                            <h2 style="font-size: 1.1rem;" data-i18n="active_orders_title">Active Orders</h2>
-                            <div class="table-container">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th data-i18n="th_order_id">ID</th>
-                                            <th data-i18n="th_market">Market</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="orders-body"></tbody>
-                                </table>
-                            </div>
-                        </div>
+                    <h2 style="font-size: 1.2rem;" data-i18n="leaderboard_title">Arena Leaderboard (24H)</h2>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th data-i18n="th_bot">Bot Name</th>
+                                    <th data-i18n="th_strat">Strategy</th>
+                                    <th data-i18n="th_winrate">Win Rate</th>
+                                    <th data-i18n="th_trades">Trades</th>
+                                    <th data-i18n="th_pnl">P&L</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bots-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card" style="padding: 20px;">
+                    <h2 style="font-size: 1.2rem;" data-i18n="recent_trades_title">Recent Trades</h2>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th data-i18n="th_time">Time</th>
+                                    <th data-i18n="th_bot">Bot</th>
+                                    <th data-i18n="th_market">Market</th>
+                                    <th data-i18n="th_side">Entry</th>
+                                    <th data-i18n="th_status">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="trades-body"></tbody>
+                        </table>
                     </div>
                 </div>
 
                 <div class="card">
-                    <h2 data-i18n="live_logs_title">System Intelligence</h2>
+                    <h2 data-i18n="live_logs_title">Live Intelligence Stream</h2>
                     <div id="log-container" class="log-container" data-i18n="loading_logs">Loading logs...</div>
                 </div>
             </div>
@@ -395,84 +391,80 @@
     <script>
         const translations = {
             en: {
-                title: "PolyMarket Scalpel",
-                subtitle: "Quant Arbitrage Engine V7.0",
-                btn_start: "Initialize Engine",
+                title: "PolyMarket Arena",
+                subtitle: "Multi-Bot Adaptive Strategy Engine V8.0",
+                btn_start: "Start Arena",
                 btn_stop: "Graceful Shutdown",
-                config_title: "Strategy Core",
+                config_title: "Risk Parameters",
                 btn_save: "Apply Changes",
-                lbl_order_amount: "Order Size (USDC)",
+                lbl_order_amount: "Base Size (USDC)",
                 lbl_global_max: "Global Max",
-                lbl_cat_max: "Category Max",
-                lbl_price_min: "Min Probability",
                 lbl_max_hours: "Time Window (h)",
                 lbl_poison: "Poison Keywords",
                 lbl_excluded: "Excluded Categories",
-                help_order_amount: "Recommend 1-5% of total bankroll.",
+                help_order_amount: "Base stake per trade.",
                 vetted_title: "Safety Presets",
                 vetted_cat_desc: "Quick-add high-risk categories:",
                 vetted_kw_desc: "Quick-add resolution risk words:",
                 safety_title: "Shield Status",
-                active_positions_title: "Portfolio",
-                active_orders_title: "Pending",
-                th_token_id: "Token",
-                th_entry_price: "Cost",
-                th_l2_timer: "L2 Stop",
-                th_order_id: "ID",
-                th_market: "Target",
-                loading: "Searching...",
-                live_logs_title: "Live Intelligence Stream",
+                leaderboard_title: "Arena Leaderboard (24H)",
+                recent_trades_title: "Recent Trades",
+                th_bot: "Bot Name",
+                th_strat: "Strategy",
+                th_winrate: "Win Rate",
+                th_trades: "Trades",
+                th_pnl: "P&L",
+                th_time: "Time",
+                th_market: "Market",
+                th_side: "Entry",
+                th_status: "Status",
                 loading_logs: "Syncing logs...",
                 no_logs: "Engine standby. Start to view stream.",
-                no_positions: "No active exposure",
-                no_orders: "No pending orders",
+                no_data: "No data available",
                 toast_saved: "Strategy Updated. Restart engine to sync.",
-                toast_start: "Booting system...",
+                toast_start: "Booting arena...",
                 toast_stop: "Shutting down...",
                 status_checking: "Checking...",
-                status_running: "ENGINE ACTIVE",
-                status_stopped: "STANDBY",
-                status_offline: "API OFFLINE"
+                status_running: "ARENA ACTIVE",
+                status_stopped: "STANDBY"
             },
             zh: {
-                title: "PolyMarket 手术刀",
-                subtitle: "量化套利引擎 V7.0",
+                title: "PolyMarket 斗兽场",
+                subtitle: "多策略进化型套利引擎 V8.0",
                 btn_start: "启动引擎",
                 btn_stop: "安全停止",
-                config_title: "核心策略配置",
+                config_title: "风险与风控参数",
                 btn_save: "应用修改",
-                lbl_order_amount: "单笔投资 (USDC)",
+                lbl_order_amount: "基准单笔投资 (USDC)",
                 lbl_global_max: "全局总仓位",
-                lbl_cat_max: "单话题上限",
-                lbl_price_min: "进场胜率底线",
                 lbl_max_hours: "时间窗口 (小时)",
                 lbl_poison: "违禁词黑名单",
                 lbl_excluded: "排除的分类",
-                help_order_amount: "建议设置为总资金的 1%-5%。",
+                help_order_amount: "每次交易的基础下注金额。",
                 vetted_title: "安全专家预设",
                 vetted_cat_desc: "一键排除高风险分类：",
                 vetted_kw_desc: "一键添加结算风险词：",
                 safety_title: "防御盾状态",
-                active_positions_title: "当前持仓",
-                active_orders_title: "活动挂单",
-                th_token_id: "代币",
-                th_entry_price: "成本",
-                th_l2_timer: "止损计时",
-                th_order_id: "编号",
-                th_market: "目标市场",
-                loading: "扫描中...",
-                live_logs_title: "实时情报流",
+                leaderboard_title: "斗兽场排行榜 (24小时)",
+                recent_trades_title: "最新交易",
+                th_bot: "机器人名称",
+                th_strat: "策略",
+                th_winrate: "胜率",
+                th_trades: "交易数",
+                th_pnl: "盈亏",
+                th_time: "时间",
+                th_market: "市场",
+                th_side: "买入价",
+                th_status: "状态",
                 loading_logs: "正在同步日志...",
                 no_logs: "系统待命。点击启动以查看情报。",
-                no_positions: "当前无风险敞口",
-                no_orders: "当前无挂单",
+                no_data: "暂无数据",
                 toast_saved: "策略已更新。请重启引擎以应用。",
-                toast_start: "正在初始化系统...",
+                toast_start: "正在初始化斗兽场...",
                 toast_stop: "正在安全关闭...",
                 status_checking: "检查中...",
-                status_running: "引擎运行中",
-                status_stopped: "待命",
-                status_offline: "离线"
+                status_running: "斗兽场运行中",
+                status_stopped: "待命"
             }
         };
 
@@ -486,7 +478,7 @@
                     el.textContent = translations[currentLang][key];
                 }
             });
-            fetchStatus();
+            fetchData();
         }
 
         function toggleLanguage() {
@@ -496,8 +488,8 @@
         }
 
         const CONFIG_KEYS = [
-            "ORDER_AMOUNT_USD", "GLOBAL_MAX_POSITIONS", "MAX_ACTIVE_POSITIONS_PER_CATEGORY",
-            "ENTRY_PRICE_MIN", "MAX_HOURS_TO_EXPIRY", "POISON_KEYWORDS", "EXCLUDED_CATEGORIES"
+            "ORDER_AMOUNT_USD", "GLOBAL_MAX_POSITIONS",
+            "MAX_HOURS_TO_EXPIRY", "POISON_KEYWORDS", "EXCLUDED_CATEGORIES"
         ];
 
         async function fetchConfig() {
@@ -563,7 +555,7 @@
             setTimeout(() => t.style.display = 'none', 3000);
         }
 
-        async function fetchStatus() {
+        async function fetchData() {
             try {
                 const response = await fetch('/api/status');
                 const data = await response.json();
@@ -592,75 +584,81 @@
                             else if (clean.includes("| WARNING  |")) className += " log-warn";
                             else if (clean.includes("| ERROR    |")) className += " log-error";
                             else if (clean.includes("| DEBUG    |")) className += " log-debug";
-                            else if (clean.includes("| CRITICAL |")) className += " log-critical";
 
-                            if (clean.includes("📊 Summary") || clean.includes("Scan Complete")) {
-                                return `<div class="log-summary">${clean}</div>`;
-                            }
-                            if (clean.includes("🎯 TARGET")) {
-                                clean = clean.replace("🎯 TARGET:", '<span class="log-target">🎯 TARGET:</span>');
-                            }
-                            if (clean.includes("SKIP [")) {
-                                clean = `<span class="log-skip">${clean}</span>`;
-                            }
                             return `<div class="${className}">${clean}</div>`;
                         }).join('');
                         logContainer.scrollTop = logContainer.scrollHeight;
                     }
+                }
+
+                // Fetch Arena Bots
+                const botRes = await fetch('/api/arena/bots');
+                const botData = await botRes.json();
+                const botsBody = document.getElementById('bots-body');
+                
+                if (botData.bots && botData.bots.length > 0) {
+                    // Sort by win rate or PNL
+                    botData.bots.sort((a,b) => b.win_rate - a.win_rate);
+                    botsBody.innerHTML = botData.bots.map((b, idx) => {
+                        let rankClass = idx < 3 ? `bot-rank-${idx+1}` : '';
+                        return `<tr class="${rankClass}">
+                            <td style="font-weight:600">${b.name}</td>
+                            <td><span class="badge-tag" style="background:rgba(0,0,0,0.05); color:#333;">${b.strategy_type}</span></td>
+                            <td style="font-weight:bold">${(b.win_rate*100).toFixed(1)}%</td>
+                            <td>${b.total_trades || 0}</td>
+                            <td style="color:${b.total_pnl >= 0 ? 'var(--apple-green)' : 'var(--apple-red)'}">
+                                $${(b.total_pnl || 0).toFixed(2)}
+                            </td>
+                        </tr>`;
+                    }).join('');
                 } else {
-                    logContainer.innerHTML = `<div style="text-align:center; padding-top:100px; color:var(--apple-gray)">${translations[currentLang].no_logs}</div>`;
-                    logContainer.setAttribute('data-raw', '');
+                    botsBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--apple-gray); padding:20px;">${translations[currentLang].no_data}</td></tr>`;
                 }
 
-                if (data.state) {
-                    const posBody = document.getElementById('positions-body');
-                    if (data.state.active_positions && Object.keys(data.state.active_positions).length > 0) {
-                        posBody.innerHTML = Object.entries(data.state.active_positions).map(([tokenId, pos]) => `
-                            <tr>
-                                <td title="${tokenId}">${tokenId.substring(0, 8)}...</td>
-                                <td><span style="color:var(--apple-green); font-weight:600;">${pos.entry_price}</span></td>
-                                <td>${pos.l2_trigger_time ? `<span style="color:var(--apple-red)">Active</span>` : '-'}</td>
-                            </tr>
-                        `).join('');
-                    } else {
-                        posBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--apple-gray); padding:20px;">${translations[currentLang].no_positions}</td></tr>`;
-                    }
-
-                    const ordBody = document.getElementById('orders-body');
-                    if (data.state.active_entry_orders && Object.keys(data.state.active_entry_orders).length > 0) {
-                        ordBody.innerHTML = Object.entries(data.state.active_entry_orders).map(([orderId, ord]) => `
-                            <tr>
-                                <td title="${orderId}">${orderId.substring(0, 6)}</td>
-                                <td title="${ord.market_name}">${(ord.market_name || '').substring(0, 20)}...</td>
-                            </tr>
-                        `).join('');
-                    } else {
-                        ordBody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:var(--apple-gray); padding:20px;">${translations[currentLang].no_orders}</td></tr>`;
-                    }
+                // Fetch Arena Trades
+                const tradeRes = await fetch('/api/arena/trades');
+                const tradeData = await tradeRes.json();
+                const tradesBody = document.getElementById('trades-body');
+                
+                if (tradeData.trades && tradeData.trades.length > 0) {
+                    tradesBody.innerHTML = tradeData.trades.map(t => {
+                        let statusHtml = `<span class="trade-pending">Active</span>`;
+                        if (t.outcome === 'win') statusHtml = `<span class="trade-win">WON (+$${t.pnl.toFixed(2)})</span>`;
+                        else if (t.outcome === 'loss') statusHtml = `<span class="trade-loss">LOSS (-$${Math.abs(t.pnl).toFixed(2)})</span>`;
+                        
+                        let timeStr = new Date(t.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        
+                        return `<tr>
+                            <td style="color:var(--apple-gray); font-size:0.85rem">${timeStr}</td>
+                            <td style="font-weight:600">${t.bot_name}</td>
+                            <td title="${t.market_question}">${(t.market_question || '').substring(0, 35)}...</td>
+                            <td style="font-family:monospace">${t.entry_price.toFixed(3)}</td>
+                            <td>${statusHtml}</td>
+                        </tr>`;
+                    }).join('');
+                } else {
+                    tradesBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--apple-gray); padding:20px;">${translations[currentLang].no_data}</td></tr>`;
                 }
+
             } catch (error) {
-                console.error(">>> [UI] Status fetch failed:", error);
-                document.getElementById('status-indicator').textContent = translations[currentLang].status_offline;
+                console.error(">>> [UI] Data fetch failed:", error);
             }
         }
 
         async function controlBot(action) {
             console.log(`>>> [UI] ${action.toUpperCase()} requested`);
             try {
-                const response = await fetch(`/api/bot/${action}`, { method: 'POST' });
-                const result = await response.json();
-                console.log(`>>> [UI] ${action.toUpperCase()} API response:`, result);
                 showToast(action === 'start' ? translations[currentLang].toast_start : translations[currentLang].toast_stop);
-                setTimeout(fetchStatus, 1500); 
+                await fetch(`/api/bot/${action}`, { method: 'POST' });
+                setTimeout(() => { fetchData(); }, 1000);
             } catch (error) {
-                console.error(`>>> [UI] Control API failed:`, error);
-                alert(`Failed to ${action} bot. Check console.`);
+                alert(`Failed to ${action} arena. Check console.`);
             }
         }
 
         applyLanguage();
         fetchConfig();
-        setInterval(fetchStatus, 3000);
+        setInterval(function() { fetchData(); }, 3000);
     </script>
 </body>
 </html>

@@ -83,7 +83,7 @@ class ExecutionEngine:
             tp_order_id = await self.place_maker_order(
                 side="SELL",
                 size=fill_data.get('size'),
-                price=0.99,
+                price=settings.TAKE_PROFIT_PRICE,
                 token_id=order_info['token_id']
             )
             if tp_order_id:

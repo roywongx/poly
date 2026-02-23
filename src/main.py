@@ -7,10 +7,14 @@ from py_clob_client.clob_types import ApiCreds
 
 from .config import settings
 from .scanner import MarketScanner
-from .execution import ExecutionEngine
 from .monitor import RiskMonitor
+from . import db
+from .bots.sniper_bot import SniperBot
+from .bots.trend_bot import TrendBot
+from .bots.arb_bot import ArbBot
 
 import os
+import requests
 
 class PolyArbBot:
     def __init__(self):
@@ -18,12 +22,23 @@ class PolyArbBot:
         if not os.path.exists("logs"):
             os.makedirs("logs")
         
-        # 记录日志到文件以便 Dashboard 读取，并强制立即写入 (flush)
-        # 每次启动创建一个新文件
+        # 记录日志到文件以便 Dashboard 读取
         import datetime
-        log_name = f"logs/bot_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
-        logger.add(log_name, rotation="10 MB", retention="7 days", enqueue=True)
-        logger.info(f"Log initialized: {log_name}")
+        timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+        log_name = f"logs/bot_{timestamp}.log"
+        
+        # 移除默认 logger 并添加带强制刷新的 sink
+        logger.remove() 
+        logger.add(sys.stderr, level="INFO") # 保持控制台输出
+        logger.add(log_name, rotation="10 MB", retention="7 days")
+        
+        # 建立指引文件，告诉 Dashboard 现在的日志路径
+        try:
+            with open("logs/LATEST", "w", encoding="utf-8") as f:
+                f.write(log_name)
+        except: pass
+        
+        logger.info(f"Engine Sparked. Tracking: {log_name}")
             
         host = "https://clob.polymarket.com"
         
@@ -42,19 +57,25 @@ class PolyArbBot:
             signature_type=int(settings.SIGNATURE_TYPE) if settings.SIGNATURE_TYPE else 0,
             funder=settings.FUNDER_ADDRESS if settings.FUNDER_ADDRESS else None
         )
-        self.execution = ExecutionEngine(self.clob_client)
         self.scanner = MarketScanner(self.clob_client)
-        self.monitor = RiskMonitor(self.clob_client, self.execution)
         self.is_running = False
-        self.category_counts = {}
+        
+        # Initialize bots
+        self.bots = [
+            SniperBot(),
+            TrendBot(),
+            ArbBot()
+        ]
+        
+        # Sync bots to DB
+        for bot in self.bots:
+            db.save_bot_config(bot.name, bot.__class__.__name__, 1, bot.params)
 
     async def start(self):
         self.is_running = True
-        logger.success("PolyMarket Arb Bot Started")
+        logger.success(f"PolyMarket Arena Started in {'PAPER' if settings.PAPER_MODE else 'LIVE'} mode")
         tasks = [
-            asyncio.create_task(self.scanner_loop()),
-            asyncio.create_task(self.monitor.watch_portfolio()),
-            asyncio.create_task(self.state_dumper_loop())
+            asyncio.create_task(self.scanner_loop())
         ]
         try:
             await asyncio.gather(*tasks)
@@ -63,40 +84,45 @@ class PolyArbBot:
         finally:
             await self.shutdown()
 
-    async def state_dumper_loop(self):
-        import json
-        while self.is_running:
-            try:
-                state = {
-                    "active_entry_orders": self.execution.active_entry_orders,
-                    "tp_placed_orders": list(self.execution.tp_placed_orders),
-                    "active_positions": self.monitor.active_positions,
-                    "category_counts": self.category_counts
-                }
-                with open("bot_state.json", "w", encoding="utf-8") as f:
-                    json.dump(state, f, ensure_ascii=False, indent=2)
-            except Exception as e:
-                pass
-            await asyncio.sleep(5)
+    async def fetch_ob(self, token_id):
+        try:
+            url = f"https://clob.polymarket.com/book?token_id={token_id}"
+            resp = await asyncio.get_event_loop().run_in_executor(None, requests.get, url)
+            if resp.status_code == 200:
+                data = resp.json()
+                class MockBid:
+                    def __init__(self, d):
+                        self.price = d['price']
+                        self.size = d['size']
+                return [MockBid(b) for b in data.get('bids', [])]
+            return []
+        except Exception:
+            return []
 
     async def scanner_loop(self):
         while self.is_running:
             try:
                 markets = await self.scanner.get_eligible_markets()
-                for m in markets:
-                    await self.execution.process_signal(m, m['time_class'])
-                await asyncio.sleep(60)
+                for market in markets:
+                    token_id = market.get('token_id')
+                    if not token_id: continue
+                    
+                    bids = await self.fetch_ob(token_id)
+                    if not bids: continue
+                    
+                    for bot in self.bots:
+                        signal = await bot.analyze(market, bids)
+                        if signal.get("action") == "buy":
+                            await bot.execute(market, signal, self.clob_client)
+                            
+                await asyncio.sleep(15) # Faster scanning loop like Arena
             except Exception as e:
-                logger.error(f"Scanner error: {e}")
+                logger.error(f"Scanner loop error: {e}")
                 await asyncio.sleep(10)
 
     async def shutdown(self):
         self.is_running = False
         logger.warning("Shutting down...")
-        for order_id in list(self.execution.active_entry_orders.keys()):
-            try:
-                await self.clob_client.cancel_order(order_id)
-            except: pass
 
 if __name__ == "__main__":
     bot = PolyArbBot()

@@ -16,8 +16,10 @@ app = FastAPI(title="PolyMarket Arb Bot Dashboard")
 # Constants
 BOT_PROCESS_NAME = "src.main"
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
 
-# Ensure directories exist
+from src import db
 os.makedirs(os.path.join(BASE_DIR, "src", "static"), exist_ok=True)
 os.makedirs(os.path.join(BASE_DIR, "src", "templates"), exist_ok=True)
 os.makedirs(os.path.join(BASE_DIR, "logs"), exist_ok=True)
@@ -32,6 +34,7 @@ ALLOWED_CONFIG_KEYS = [
     "MAX_ACTIVE_POSITIONS_PER_CATEGORY", 
     "ENTRY_PRICE_MIN", 
     "MAX_HOURS_TO_EXPIRY",
+    "TAKE_PROFIT_PRICE",
     "STOP_LOSS_L1_TRIGGER",
     "STOP_LOSS_L2_TRIGGER",
     "POISON_KEYWORDS",
@@ -46,17 +49,17 @@ def is_bot_running() -> bool:
     for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
         try:
             cmdline = proc.info.get('cmdline')
-            if cmdline and any(BOT_PROCESS_NAME in cmd for cmd in cmdline):
-                # Ensure it's the bot, not the dashboard
-                if any("dashboard.py" in cmd for cmd in cmdline):
-                    continue
+            if not cmdline: continue
+            cmd_str = " ".join(cmdline).lower()
+            if "python" in cmd_str and "src.main" in cmd_str:
+                if "dashboard.py" in cmd_str: continue
                 return True
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             pass
     return False
 
 def start_bot():
-    print("\n>>> [DASHBOARD] RESTARTING BOT ENGINE...")
+    print("\n>>> [DASHBOARD] ENGINE IGNITION SEQUENCE START")
     stop_bot()
     import time
     time.sleep(1)
@@ -72,28 +75,27 @@ def start_bot():
             [python_exe, "-m", "src.main"],
             cwd=BASE_DIR,
             env=env,
-            creationflags=subprocess.CREATE_NEW_CONSOLE if os.name == 'nt' else 0,
-            stdout=None, 
-            stderr=None
+            creationflags=subprocess.CREATE_NEW_CONSOLE if os.name == 'nt' else 0
         )
-        print(">>> [LAUNCH] Bot spawned successfully in a new terminal.")
+        print(">>> [LAUNCH] Success. Bot spawned in new console.")
     except Exception as e:
         print(f">>> [LAUNCH] ERROR: {e}")
 
 def stop_bot():
-    print(">>> [DASHBOARD] SCANNING FOR INSTANCES TO STOP...")
+    print(">>> [DASHBOARD] PERFORMING SYSTEM SWEEP...")
     count = 0
     for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
         try:
             cmdline = proc.info.get('cmdline')
-            if cmdline and any(BOT_PROCESS_NAME in cmd for cmd in cmdline):
-                if any("dashboard.py" in cmd for cmd in cmdline): continue
-                print(f">>> [KILL] Stopping PID {proc.info['pid']}")
-                proc.terminate()
+            if not cmdline: continue
+            cmd_str = " ".join(cmdline).lower()
+            if "python" in cmd_str and "src.main" in cmd_str:
+                if "dashboard.py" in cmd_str: continue
+                print(f">>> [KILL] Target PID {proc.info['pid']} neutralized.")
+                proc.kill()
                 count += 1
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
-            pass
-    print(f">>> [DASHBOARD] Cleaned up {count} ghost processes.")
+        except: pass
+    print(f">>> [DASHBOARD] {count} instances cleaned.")
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
@@ -122,20 +124,46 @@ async def get_status():
                 state = json.load(f)
         except: pass
 
+    # Read logs via LATEST pointer for 1000% accuracy
     logs = []
-    log_dir = os.path.join(BASE_DIR, "logs")
-    if os.path.exists(log_dir):
-        files = [os.path.join(log_dir, f) for f in os.listdir(log_dir) if f.endswith(".log")]
-        if files:
-            latest = max(files, key=os.path.getmtime)
-            try:
-                with open(latest, "r", encoding="utf-8") as f:
-                    lines = f.readlines()
-                    logs = lines[-1000:]
-                    # print(f">>> [DEBUG] Reading log: {latest}, lines: {len(logs)}")
-            except: pass
+    latest_ptr = os.path.join(BASE_DIR, "logs", "LATEST")
+    if os.path.exists(latest_ptr):
+        try:
+            with open(latest_ptr, "r", encoding="utf-8") as f:
+                current_log_path = f.read().strip()
+                # If bot_... is stored, join it with BASE_DIR
+                full_log_path = os.path.join(BASE_DIR, current_log_path)
+                if os.path.exists(full_log_path):
+                    with open(full_log_path, "r", encoding="utf-8") as lf:
+                        logs = lf.readlines()[-1000:]
+        except: pass
 
     return JSONResponse({"status": "running" if running else "stopped", "state": state, "logs": logs})
+
+@app.get("/api/arena/bots")
+async def get_arena_bots():
+    try:
+        bots = db.get_active_bots()
+        for b in bots:
+            perf = db.get_bot_performance(b["name"], hours=24)
+            b.update(perf)
+        return JSONResponse({"bots": bots})
+    except Exception as e:
+        print(f"Error fetching bots: {e}")
+        return JSONResponse({"bots": []})
+
+@app.get("/api/arena/trades")
+async def get_arena_trades():
+    try:
+        with db.get_conn() as conn:
+            rows = conn.execute('''
+                SELECT * FROM trades 
+                ORDER BY created_at DESC LIMIT 50
+            ''').fetchall()
+            return JSONResponse({"trades": [dict(r) for r in rows]})
+    except Exception as e:
+        print(f"Error fetching trades: {e}")
+        return JSONResponse({"trades": []})
 
 @app.post("/api/bot/start")
 async def api_start_bot(background_tasks: BackgroundTasks):

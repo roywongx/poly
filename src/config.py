@@ -4,6 +4,9 @@ from pydantic import Field, model_validator
 from typing import List, Optional
 
 class Settings(BaseSettings):
+    # === 系统模式 ===
+    PAPER_MODE: bool = True                                # 是否开启模拟盘 (Paper Trading)
+
     # === 基础连接配置 ===
     WALLET_ADDRESS: str                                    # 您的钱包地址 (用于查询余额)
     CHAIN_ID: int = 137                                    # 网络 ID (Polygon 为 137)
@@ -33,7 +36,8 @@ class Settings(BaseSettings):
     FUNDER_ADDRESS: Optional[str] = None
     SIGNATURE_TYPE: Optional[str] = "0"
 
-    # 严苛止损参数
+    # 止盈止损参数
+    TAKE_PROFIT_PRICE: float = 0.99    # 自动止盈目标价
     STOP_LOSS_L1_TRIGGER: float = 0.91 # 撤销止盈
     STOP_LOSS_L2_TRIGGER: float = 0.85 # 市价止损
     STOP_LOSS_L2_CONFIRM_SECONDS: int = 15
@@ -43,8 +47,8 @@ class Settings(BaseSettings):
     CB_MAX_HARD_STOPS: int = 2
     CB_SLEEP_HOURS: int = 24
 
-    POISON_KEYWORDS: str = "dispute,uma,opinion,oscars,twitter,tweet,x.com,announce,live,next goal,minute,tom hanks,ellen degeneres,rumor,death,fake"
-    EXCLUDED_CATEGORIES: str = "Sports,Pop Culture"
+    POISON_KEYWORDS: str = ""
+    EXCLUDED_CATEGORIES: str = ""
     
     MAX_VOLATILITY_THRESHOLD: float = 0.05
     LIQUIDITY_DEPTH_MULTIPLIER: int = 5

@@ -1,13 +1,13 @@
-# 🗡️ PolyMarket Scalpel Bot V7.0 (HFT Resistant)
+# 🗡️ PolyMarket Arena Bot V8.0 (Multi-Strategy Engine)
 
 [English](#english) | [中文](#中文)
 
 ---
 
-## 🌐 1-Click Web Dashboard / 零代码网页控制面板 (NEW in V7.0)
+## 🌐 1-Click Web Dashboard / 零代码网页控制面板 (V8.0)
 
-Forget about editing code or configuration files. V7.0 introduces a modern, bilingual Web Dashboard that allows you to control everything from your browser.
-忘掉枯燥的代码和配置文件吧。V7.0 引入了现代化的中英双语网页控制面板，一切操作都在浏览器中可视化完成。
+Forget about editing code or configuration files. V8.0 introduces a modern, bilingual Web Dashboard that allows you to control a fleet of bots from your browser.
+忘掉枯燥的代码和配置文件吧。V8.0 引入了现代化的中英双语网页控制面板，一切操作都在浏览器中可视化完成，并能同时监控多个机器人的战斗。
 
 **How to start / 如何启动:**
 1. Open your terminal / 打开命令行终端.
@@ -18,10 +18,10 @@ Forget about editing code or configuration files. V7.0 introduces a modern, bili
 3. Open your browser and go to / 打开浏览器访问: **`http://localhost:8000`**
 
 ### Features / 面板功能:
-- **1-Click Start/Stop (一键启停)**: Safely start or shut down the bot.
+- **Arena Leaderboard (斗兽场排行榜)**: Watch Sniper, Trend, and Arb bots compete in real-time based on Win Rate and P&L.
+- **Paper Trading Mode (无风险模拟盘)**: Test strategies safely without risking real USDC.
+- **Live Trade History (实时交易流水)**: See exactly why a bot bought a market and its final outcome, powered by an underlying SQLite database.
 - **Visual Configuration (可视化调参)**: Change bet size, risk limits, and safety filters on the fly.
-- **Live Monitoring (实时监控)**: Watch active positions, open orders, and a color-coded live log stream.
-- **Bilingual (中英双语)**: Click the "EN / 中文" button at the top right to switch languages.
 
 ---
 
@@ -30,26 +30,24 @@ Forget about editing code or configuration files. V7.0 introduces a modern, bili
 ## English
 
 ### 🛡️ Strategy & Safety Filters
-To ensure the highest win rate (94%+), the bot comes pre-configured with industry-vetted safety filters.
+To ensure safety, the engine comes pre-configured with industry-vetted safety filters that apply to ALL bots in the arena.
 
 #### 🚫 Dangerous Categories
-The following categories are excluded by default because they are prone to high volatility, manipulation, or resolution disputes:
+The following categories are excluded by default:
 - **Sports**: Extremely high volatility and dominated by HFT (High-Frequency Trading) bots.
-- **Pop Culture / Entertainment**: Often based on rumors or subjective interpretations, high dependency on "unreliable" social media sources.
+- **Pop Culture / Entertainment**: Often based on rumors or subjective interpretations.
 
 #### 🧪 Poison Keywords
-We skip any markets containing these "Poison" words to avoid ambiguity and resolution conflicts:
-- `UMA`, `Dispute`: Signals potential conflicts in how the market will be settled.
-- `Twitter`, `X.com`: Sources that are too volatile or prone to fake news.
-- `Announce`, `Live`, `Minute`: Real-time event risks where prices move faster than the bot can react.
-- `Opinion`, `Subjective`: Markets that aren't based on hard, objective facts.
-- `Death`, `Rumor`, `Fake`: High misinformation risk.
+We skip any markets containing these "Poison" words:
+- `UMA`, `Dispute`: Signals potential conflicts in settlement.
+- `Twitter`, `X.com`, `Death`, `Rumor`, `Fake`: High misinformation risk.
 
-### 🧠 Design Philosophy: The "Scalpel" Approach
-PolyMarket Scalpel is a high-frequency-ready (HFT) short-term arbitrage bot. 
-- **Precision**: Targets extreme high-probability (0.94-0.99) outcomes in their final 1-15 hours.
-- **Resilience**: Uses momentum filters to avoid "falling knives" and 5x liquidity checks to prevent HFT front-running and slippage.
-- **Security First**: Private keys are heavily encrypted and stored in your operating system's hardware-backed keyring (AES-256). They never exist in plain text in the codebase.
+### 🧠 Design Philosophy: The "Arena" Approach
+V8.0 transitions from a single monolithic bot to a multi-bot architecture:
+- **Sniper-V1**: The classic conservative bot. Needs >93% win probability.
+- **Trend-V1**: A momentum follower. Enters at >70% if the market shows strong positive momentum.
+- **Arb-V1**: The aggressive short-term arbitrage bot. Enters at >60% but demands massive 10x liquidity to ensure quick exits.
+- **Learning Infrastructure**: Backed by `learning.py` and `db.py`, laying the foundation for Bayesian adaptive learning to automatically tweak these thresholds in V9.0.
 
 ### 🚀 Advanced Installation (CLI)
 
@@ -86,26 +84,24 @@ PolyMarket Scalpel is a high-frequency-ready (HFT) short-term arbitrage bot.
 ## 中文
 
 ### 🛡️ 核心策略与安全过滤
-为了确保极高的胜率（>94%），机器人预设了经过实战验证的安全过滤机制。这些机制可以在网页控制面板中随时修改。
+为了确保资金安全，引擎预设了适用于所有机器人的全局安全过滤机制。
 
 #### 🚫 危险分类 (Excluded Categories)
-以下分类默认被排除，因为它们极易受到高波动、人为操纵或结算争议的影响：
-- **Sports (体育)**: 极高的波动性，且充斥着专门用来“割韭菜”的高频交易机器人。
-- **Pop Culture (流行文化) / 娱乐**: 结果往往基于主观判断或谣言，信源极不可靠。
+以下分类默认被排除：
+- **Sports (体育)**: 极高的波动性，且充斥着高频交易机器人。
+- **Pop Culture (流行文化) / 娱乐**: 结果往往基于主观判断或谣言。
 
 #### 🧪 违禁词库 (Poison Keywords)
-我们避开包含以下“毒药”词汇的市场，以防止结算歧义和争议：
-- `UMA`, `Dispute`: 强烈暗示该市场在结算时可能会引发争议和仲裁。
-- `Twitter`, `X.com`: 假消息泛滥，价格极易被单条推文操控。
-- `Announce`, `Live`, `Minute`: 实时直播类事件，价格变化太快，普通机器人会被高频套利者抢跑。
-- `Opinion`, `Subjective`: 主观意见类市场，缺乏客观结算标准。
-- `Death`, `Rumor`, `Fake`: 虚假信息风险极高。
+我们避开包含以下“毒药”词汇的市场：
+- `UMA`, `Dispute`: 强烈暗示争议和仲裁。
+- `Twitter`, `Rumor`, `Fake`: 假消息风险极高。
 
-### 🧠 设计思想：“手术刀”原则
-PolyMarket Scalpel 是一款专为极短线套利、追求极高胜率设计的机器人。
-- **极致精准**：仅锁定距离揭晓结果前 1-15 小时、市场公认胜率极高（价格 0.94-0.99）的机会。
-- **抗高频猎杀**：内置动量过滤拒绝“接飞刀”，并强制要求订单簿深度至少为下注额的 5 倍，防止滑点和高频机器人割韭菜。
-- **军事级安全**：您的私钥被加密存储于 Windows/macOS 操作系统内核级的保险箱中，永不会以明文形式出现在代码或磁盘里。
+### 🧠 设计思想：“斗兽场”架构
+V8.0 彻底重构了底层，从单一机器人进化为“多策略并行竞争”的斗兽场模式：
+- **Sniper-V1 (狙击手)**: 维持严苛标准，胜率 > 93% 且流动性达标才出手。
+- **Trend-V1 (趋势客)**: 门槛降至 70%，但要求标的有极强的上升动能。
+- **Arb-V1 (套利者)**: 门槛降至 60%，激进打法，但要求 10 倍的超高深度护航。
+- **成长型基因**: 引入了 SQLite 本地数据库和贝叶斯特征提取 (`learning.py`)，它会默默记录每一次输赢的特征，为未来的参数自动进化做准备。
 
 ### 🚀 命令行安装指南 (开发者)
 
@@ -130,30 +126,9 @@ PolyMarket Scalpel 是一款专为极短线套利、追求极高胜率设计的�
    source venv/bin/activate
    pip install -r requirements.txt
    ```
-2. **凭证配置 (导入钱包)**：
-   ```bash
-   python3 scripts/onboard_user.py
-   ```
-
----
-
-## 🤖 AI Context & Prompt (For AI Reviewers/Backtesting)
-
-*If you are an LLM or an AI agent analyzing this repository, please consider the following architecture context:*
-
-**System Architecture:**
-1. **Scanner (`src/scanner.py`)**: Responsible for fetching active markets from the Polymarket Gamma API. It employs severe server-side pagination and date filtering (`end_date_min`/`end_date_max`) converted strictly to UTC. It filters markets based on localized JSON tags, `POISON_KEYWORDS`, and `EXCLUDED_CATEGORIES`. Momentum checks are performed via the API's `oneDayPriceChange` metric.
-2. **Execution (`src/execution.py`)**: Uses the new `py_clob_client` (v0.34.6+) for Maker order placement at precise `0.94-0.96` boundaries. TP (Take Profit) orders are handled asynchronously once matched.
-3. **Monitor (`src/monitor.py`)**: Avoids fragile WebSocket connections. It relies on a high-frequency (every 2s) REST polling loop. Implements Strict Stop-Loss at `0.85` (15s L2 Timer) and a Global Circuit Breaker (Halts if 2 stops triggered in 12h).
-4. **Dashboard (`src/dashboard.py`)**: A FastAPI + Jinja2 UI that uses `psutil` to manage the bot as a background daemon. Reads logs directly from disk for live rendering.
-
-**Key constraints for further modifications:**
-- Never revert the REST polling back to WebSockets unless `py_clob_client` implements unified robust connection pooling.
-- Retain the OS keyring structure for `EOA_PRIVATE_KEY`; never expose secrets in plain text.
-- Do not remove the momentum protection logic; high-probability markets dropping >2% in a day are extremely toxic on Polymarket.
 
 ---
 
 ## ⚠️ Disclaimer / 免责声明
-This software is for educational purposes. Trading involves risk. Never risk money you cannot afford to lose.
-本软件仅供技术研究，量化交易具有高度风险，任何参数设置都无法保证 100% 盈利。请谨慎操作，切勿投入无法承受损失的资金。
+This software is for educational purposes. Trading involves risk. Never risk money you cannot afford to lose. Default runs in PAPER MODE.
+本软件仅供技术研究，默认运行在无风险模拟盘。量化交易具有高度风险，请谨慎操作。
