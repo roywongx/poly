@@ -359,6 +359,24 @@
             <div class="right-column">
                 
                 <div class="card" style="padding: 20px;">
+                    <h2 style="font-size: 1.2rem; margin-bottom: 15px;">
+                        <span data-i18n="report_title">24H AI Analysis Report</span>
+                        <button class="btn btn-ghost" onclick="fetchReport()" style="padding: 4px 10px; font-size: 12px;">Refresh</button>
+                    </h2>
+                    <div id="analysis-report" style="font-size: 0.9rem; line-height: 1.5; color: var(--text-main); background: rgba(0,0,0,0.03); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color);">
+                        <span data-i18n="loading_report">Generating report...</span>
+                    </div>
+                </div>
+
+                <div class="card" style="padding: 20px;">
+                    <h2 style="font-size: 1.2rem; margin-bottom: 10px;" data-i18n="bot_params_title">Bot Strategy Tweaks</h2>
+                    <p style="font-size: 0.8rem; color: var(--apple-gray); margin-top: 0; margin-bottom: 20px;" data-i18n="bot_params_desc">Modify live parameters for each bot based on the analysis report above. Click 'Save' next to a bot to apply immediately.</p>
+                    <div id="bot-params-container" style="display: flex; flex-direction: column; gap: 15px;">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+
+                <div class="card" style="padding: 20px;">
                     <h2 style="font-size: 1.2rem;" data-i18n="leaderboard_title">Arena Leaderboard (24H)</h2>
                     <div class="table-container">
                         <table>
@@ -424,6 +442,10 @@
                 vetted_kw_desc: "Quick-add resolution risk words:",
                 safety_title: "Shield Status",
                 leaderboard_title: "Arena Leaderboard (24H)",
+                report_title: "24H AI Analysis Report",
+                loading_report: "Generating report...",
+                bot_params_title: "Bot Strategy Tweaks",
+                bot_params_desc: "Modify live parameters for each bot based on the analysis report above. Click 'Save' to apply.",
                 recent_trades_title: "Recent Trades",
                 th_bot: "Bot Name",
                 th_strat: "Strategy",
@@ -462,6 +484,10 @@
                 vetted_kw_desc: "一键添加结算风险词：",
                 safety_title: "防御盾状态",
                 leaderboard_title: "斗兽场排行榜 (24小时)",
+                report_title: "24小时 AI 盘后分析报告",
+                loading_report: "正在生成报告...",
+                bot_params_title: "机器人策略微调",
+                bot_params_desc: "根据上方分析报告，随时调整机器人的容忍度。修改后点击保存立即生效（无需重启）。",
                 recent_trades_title: "最新交易",
                 th_bot: "机器人名称",
                 th_strat: "策略",
@@ -585,6 +611,42 @@
             setTimeout(() => t.style.display = 'none', 3000);
         }
 
+        async function fetchReport() {
+            try {
+                const res = await fetch('/api/arena/report');
+                const data = await res.json();
+                const container = document.getElementById('analysis-report');
+                if (data.report && data.report.length > 0) {
+                    container.innerHTML = data.report.map(line => `<div style="margin-bottom: 8px;">${line}</div>`).join('');
+                } else {
+                    container.innerHTML = 'Not enough data for a report yet.';
+                }
+            } catch (error) {
+                console.error(">>> [UI] Report fetch failed:", error);
+            }
+        }
+
+        async function saveBotConfig(botName) {
+            try {
+                // Collect inputs for this bot
+                const inputs = document.querySelectorAll(`input[data-bot="${botName}"]`);
+                let params = {};
+                inputs.forEach(input => {
+                    params[input.name] = parseFloat(input.value);
+                });
+                
+                await fetch('/api/arena/bot_config', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({name: botName, params: params})
+                });
+                showToast(`${botName} strategy updated!`);
+            } catch (error) {
+                console.error(">>> [UI] Bot config save failed:", error);
+                alert("Failed to save bot strategy.");
+            }
+        }
+
         async function fetchData() {
             try {
                 const response = await fetch('/api/status');
@@ -629,8 +691,32 @@
                 if (botData.bots && botData.bots.length > 0) {
                     // Sort by win rate or PNL
                     botData.bots.sort((a,b) => b.win_rate - a.win_rate);
+                    
+                    let paramsHtml = '';
+
                     botsBody.innerHTML = botData.bots.map((b, idx) => {
                         let rankClass = idx < 3 ? `bot-rank-${idx+1}` : '';
+                        
+                        // Generate params HTML for this bot
+                        let inputsHtml = Object.entries(b.params || {}).map(([key, val]) => `
+                            <div style="flex: 1; min-width: 100px;">
+                                <label style="font-size:0.75rem; color:var(--apple-gray); display:block; margin-bottom:4px;">${key}</label>
+                                <input type="number" step="0.01" name="${key}" data-bot="${b.name}" value="${val}" style="padding:6px; font-size:0.85rem;">
+                            </div>
+                        `).join('');
+
+                        paramsHtml += `
+                            <div style="border: 1px solid var(--border-color); padding: 12px; border-radius: 12px; background: white;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+                                    <strong style="font-size:0.9rem;">${b.name}</strong>
+                                    <button class="btn btn-ghost" style="padding:4px 12px; font-size:0.8rem; background:rgba(0,113,227,0.1); color:var(--apple-blue);" onclick="saveBotConfig('${b.name}')">Save</button>
+                                </div>
+                                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                                    ${inputsHtml}
+                                </div>
+                            </div>
+                        `;
+
                         return `<tr class="${rankClass}">
                             <td style="font-weight:600">${b.name}</td>
                             <td><span class="badge-tag" style="background:rgba(0,0,0,0.05); color:#333;">${b.strategy_type}</span></td>
@@ -641,8 +727,16 @@
                             </td>
                         </tr>`;
                     }).join('');
+                    
+                    const paramsContainer = document.getElementById('bot-params-container');
+                    // Only update if it's empty to avoid overwriting user input while they type
+                    if (paramsContainer.innerHTML.trim() === '' || paramsContainer.innerHTML.includes('<!-- Injected via JS -->')) {
+                        paramsContainer.innerHTML = paramsHtml;
+                    }
+
                 } else {
                     botsBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--apple-gray); padding:20px;">${translations[currentLang].no_data}</td></tr>`;
+                    document.getElementById('bot-params-container').innerHTML = '';
                 }
 
                 // Fetch Arena Trades

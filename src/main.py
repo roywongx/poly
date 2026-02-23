@@ -67,9 +67,13 @@ class PolyArbBot:
             ArbBot()
         ]
         
-        # Sync bots to DB
+        # Sync bots to DB and load custom params
         for bot in self.bots:
-            db.save_bot_config(bot.name, bot.__class__.__name__, 1, bot.params)
+            db_config = db.get_bot_config(bot.name)
+            if db_config:
+                bot.params.update(db_config)
+            else:
+                db.save_bot_config(bot.name, bot.__class__.__name__, 1, bot.params)
 
     async def start(self):
         self.is_running = True

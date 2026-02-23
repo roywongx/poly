@@ -116,4 +116,18 @@ def get_active_bots():
         rows = conn.execute('SELECT * FROM bot_configs WHERE active = 1').fetchall()
         return [dict(r) for r in rows]
 
+def get_bot_config(name):
+    with get_conn() as conn:
+        row = conn.execute('SELECT params FROM bot_configs WHERE name = ?', (name,)).fetchone()
+        if row and row["params"]:
+            return json.loads(row["params"])
+        return None
+
+def update_bot_params(name, new_params):
+    current = get_bot_config(name)
+    if current:
+        current.update(new_params)
+        with get_conn() as conn:
+            conn.execute('UPDATE bot_configs SET params = ? WHERE name = ?', (json.dumps(current), name))
+    
 init_db()

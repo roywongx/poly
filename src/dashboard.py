@@ -148,10 +148,50 @@ async def get_arena_bots():
         for b in bots:
             perf = db.get_bot_performance(b["name"], hours=24)
             b.update(perf)
+            # Parse params if it's a string (JSON from sqlite)
+            if isinstance(b.get("params"), str):
+                try:
+                    b["params"] = json.loads(b["params"])
+                except:
+                    b["params"] = {}
         return JSONResponse({"bots": bots})
     except Exception as e:
         print(f"Error fetching bots: {e}")
         return JSONResponse({"bots": []})
+
+class BotConfigUpdate(BaseModel):
+    name: str
+    params: dict
+
+@app.post("/api/arena/bot_config")
+async def update_arena_bot_config(config: BotConfigUpdate):
+    try:
+        db.update_bot_params(config.name, config.params)
+        return {"status": "success"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}, 500
+
+@app.get("/api/arena/report")
+async def get_arena_report():
+    try:
+        bots = db.get_active_bots()
+        report_lines = []
+        for b in bots:
+            perf = db.get_bot_performance(b["name"], hours=24)
+            if perf["total_trades"] == 0:
+                report_lines.append(f"🤖 {b['name']} has 0 trades. The market is quiet or the filters are too strict. Consider relaxing the parameters.")
+            else:
+                wr = perf["win_rate"]
+                if wr < 0.5:
+                    report_lines.append(f"⚠️ {b['name']} is losing money (Win rate: {wr:.1%}). You should tighten the safety filters or increase depth_multiplier.")
+                elif wr > 0.8:
+                    report_lines.append(f"✅ {b['name']} is performing exceptionally well (Win rate: {wr:.1%}). The current parameters are solid.")
+                else:
+                    report_lines.append(f"📊 {b['name']} is performing average (Win rate: {wr:.1%}). Monitor for a few more days.")
+        
+        return JSONResponse({"report": report_lines})
+    except Exception as e:
+        return JSONResponse({"report": ["Error generating report."]})
 
 @app.get("/api/arena/trades")
 async def get_arena_trades():
