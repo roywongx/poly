@@ -263,12 +263,12 @@
                 <button class="btn btn-ghost" onclick="toggleLanguage()" id="lang-btn">🇺🇸 EN</button>
                 <div id="status-indicator" class="status-badge status-stopped" data-i18n="status_checking">Checking...</div>
                 <div class="controls" style="display: flex; gap: 10px;">
-                    <div style="display: flex; align-items: center; gap: 8px; margin-right: 10px;">
+                    <div id="paper-mode-container" style="display: flex; align-items: center; gap: 8px; margin-right: 10px; padding: 4px 12px; border-radius: 12px; transition: all 0.3s ease;">
                         <label class="switch" style="position: relative; display: inline-block; width: 44px; height: 24px;">
                             <input type="checkbox" id="cfg-PAPER_MODE" onchange="togglePaperMode()" style="opacity: 0; width: 0; height: 0;">
                             <span class="slider round" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px;"></span>
                         </label>
-                        <span style="font-size: 0.85rem; font-weight: 600;" data-i18n="lbl_paper_mode">Paper Mode</span>
+                        <span id="paper-mode-label" style="font-size: 0.85rem; font-weight: 700;" data-i18n="lbl_paper_mode">Paper Mode</span>
                     </div>
                     <button class="btn btn-success" onclick="controlBot('start')">
                         <span data-i18n="btn_start">Start Arena</span>
@@ -542,7 +542,9 @@
                     const el = document.getElementById(`cfg-${key}`);
                     if(el && data[key] !== undefined) {
                         if (el.type === 'checkbox') {
-                            el.checked = data[key] === 'True' || data[key] === 'true' || data[key] === true;
+                            const isChecked = data[key] === 'True' || data[key] === 'true' || data[key] === true;
+                            el.checked = isChecked;
+                            if (key === 'PAPER_MODE') updatePaperModeUI(isChecked);
                         } else {
                             el.value = data[key];
                         }
@@ -554,12 +556,27 @@
 
         async function togglePaperMode() {
             const isChecked = document.getElementById('cfg-PAPER_MODE').checked;
+            updatePaperModeUI(isChecked);
             await fetch('/api/config', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({key: 'PAPER_MODE', value: isChecked ? 'True' : 'False'})
             });
             showToast(translations[currentLang].toast_saved);
+        }
+
+        function updatePaperModeUI(isActive) {
+            const container = document.getElementById('paper-mode-container');
+            const label = document.getElementById('paper-mode-label');
+            if (isActive) {
+                container.style.backgroundColor = 'rgba(0, 113, 227, 0.15)';
+                container.style.border = '1px solid rgba(0, 113, 227, 0.3)';
+                label.style.color = 'var(--apple-blue)';
+            } else {
+                container.style.backgroundColor = 'rgba(255, 59, 48, 0.1)';
+                container.style.border = '1px solid rgba(255, 59, 48, 0.3)';
+                label.style.color = 'var(--apple-red)';
+            }
         }
 
         function renderTags() {
